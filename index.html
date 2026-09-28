@@ -1,0 +1,1367 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="Demonstração do Prime Frotas, sistema de gestão de frotas, com dados fictícios.">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Prime Frotas — Demonstração</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@500;700&family=Roboto:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --primary:#56e1c6; --primary-ink:#0b3b33; --primary-strong:#1aa98d;
+  --accent:#5f6368; --sidebar:#72dfd8; --sidebar-ink:#10302b;
+  --bg:#f3f5f7; --surface:#ffffff; --surface-2:#f7f9fa; --text:#14191d; --muted:#6b7480;
+  --line:#e5e9ee; --danger:#e03131; --danger-soft:#fde8e8; --ok:#15a34a; --ok-soft:#e3f7ea;
+  --warn:#e8870e; --warn-soft:#fff1de; --purple:#7c3aed; --purple-soft:#efe7ff; --red:#c8102e;
+  --shadow:0 1px 2px rgba(16,24,40,.04),0 6px 18px rgba(16,24,40,.06);
+  --radius:14px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1417; --surface:#172026; --surface-2:#1c272e; --text:#e8eef2; --muted:#98a6b1; --line:#2a363e;
+    --danger-soft:#3a1d1f; --ok-soft:#173424; --warn-soft:#3a2a14; --purple-soft:#2a2140;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 22px rgba(0,0,0,.3); color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1417; --surface:#172026; --surface-2:#1c272e; --text:#e8eef2; --muted:#98a6b1; --line:#2a363e;
+  --danger-soft:#3a1d1f; --ok-soft:#173424; --warn-soft:#3a2a14; --purple-soft:#2a2140;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 22px rgba(0,0,0,.3); color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;height:100%;}
+#root{height:100%}
+body{background:var(--bg);color:var(--text);font-family:"Roboto",Arial,sans-serif;font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{font-family:"Roboto Condensed","Roboto",Arial Narrow,Arial,sans-serif;margin:0;letter-spacing:-.01em}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--primary-strong);outline-offset:2px;border-radius:6px}
+img{max-width:100%}
+.hidden{display:none!important}
+.muted{color:var(--muted)}
+
+/* ---------- Layout ---------- */
+.app{display:grid;grid-template-columns:232px 1fr;height:100%}
+.sidebar{background:var(--sidebar);color:var(--sidebar-ink);display:flex;flex-direction:column;height:100%;min-height:0;position:sticky;top:0}
+.brand{display:flex;gap:12px;align-items:center;padding:16px 16px 14px}
+.brand-logo{width:56px;height:48px;border-radius:12px;background:#fff;display:grid;place-items:center;overflow:hidden;flex:none;box-shadow:0 2px 6px rgba(0,0,0,.08)}
+.brand-logo img{width:100%;height:100%;object-fit:contain}
+.brand b{display:block;font-family:"Roboto Condensed",Arial,sans-serif;font-size:17px;line-height:1.1}
+.brand small{font-size:12px;opacity:.75;font-weight:500}
+.nav{flex:1;overflow:auto;padding:6px 8px;border-top:1px solid rgba(0,0,0,.06)}
+.nav a{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:12px;text-decoration:none;font-size:14px;color:var(--sidebar-ink);margin-bottom:2px}
+.nav a .code{width:26px;height:26px;border-radius:8px;background:rgba(255,255,255,.75);display:grid;place-items:center;font-size:9.5px;font-weight:700;letter-spacing:.02em;flex:none}
+.nav a:hover{background:rgba(255,255,255,.35)}
+.nav a.active{background:var(--surface);color:var(--primary-strong);font-weight:600;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.nav a.active .code{background:var(--surface-2);color:var(--primary-strong);border:1px solid var(--line)}
+.userbox{margin:10px;background:var(--surface);color:var(--text);border-radius:14px;padding:12px}
+.userbox small{color:var(--muted);font-size:12px}
+.userbox b{display:block;font-family:"Roboto Condensed",Arial,sans-serif;font-size:14px;text-transform:uppercase;margin:2px 0 10px}
+.main{min-width:0;display:flex;flex-direction:column;height:100%;overflow:auto}
+.topbar{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;padding:10px 24px}
+.topbar .org b{display:block;font-family:"Roboto Condensed",Arial,sans-serif;font-size:15px}
+.topbar .org span{font-size:12px;color:var(--muted);text-transform:uppercase}
+.topbar .spacer{flex:1}
+.menu-btn{display:none;border:1px solid var(--line);background:var(--surface);border-radius:10px;width:38px;height:38px;cursor:pointer}
+.demo-strip{background:var(--surface-2);border-bottom:1px solid var(--line);font-size:13px;color:var(--muted);padding:8px 24px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.demo-strip b{color:var(--text)}
+.content{padding:24px;max-width:1480px;width:100%}
+.scrim{display:none}
+
+/* ---------- Page header ---------- */
+.page-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:18px;flex-wrap:wrap}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.page-head h1{font-size:34px;line-height:1.1;margin:4px 0 2px}
+.page-head p{margin:0;color:var(--muted)}
+.head-actions{display:flex;gap:8px;flex-wrap:wrap}
+
+/* ---------- Buttons & pills ---------- */
+.btn{border:1px solid transparent;background:var(--primary);color:var(--primary-ink);font-weight:600;border-radius:12px;padding:9px 16px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;justify-content:center;white-space:nowrap;font-size:13.5px}
+.btn:hover{filter:brightness(.96)}
+.btn.ghost{background:var(--surface);border-color:var(--line);color:var(--text)}
+.btn.soft{background:var(--surface-2);border-color:var(--line);color:var(--text)}
+.btn.danger{background:var(--danger);color:#fff}
+.btn.sm{padding:6px 11px;font-size:12.5px;border-radius:10px}
+.btn.block{width:100%}
+.link{background:none;border:0;padding:0;cursor:pointer;font-weight:600;font-size:13px;color:var(--primary-strong)}
+.link.danger{color:var(--danger)}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 11px;font-size:12px;font-weight:600;border:1px solid var(--line);background:var(--surface);white-space:nowrap}
+.pill.online{background:var(--ok-soft);color:var(--ok);border-color:transparent}
+.tag{display:inline-block;border-radius:8px;padding:3px 8px;font-size:11.5px;font-weight:600;background:var(--surface-2);border:1px solid var(--line);white-space:nowrap}
+.tag.ok{background:var(--ok-soft);color:var(--ok);border-color:transparent}
+.tag.warn{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.tag.danger{background:var(--danger-soft);color:var(--danger);border-color:transparent}
+.tag.purple{background:var(--purple-soft);color:var(--purple);border-color:transparent}
+.tag.mint{background:color-mix(in srgb,var(--primary) 22%,transparent);color:var(--primary-strong);border-color:transparent}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;color:var(--primary-strong)}
+.chip:hover{background:var(--surface-2)}
+
+/* ---------- Cards ---------- */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px}
+.card h3{font-size:18px}
+.card .sub{color:var(--muted);font-size:13px;margin-top:2px}
+.card-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:12px;flex-wrap:wrap}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.stack{display:flex;flex-direction:column;gap:14px}
+.kpi{position:relative;padding:16px 18px}
+.kpi .lbl{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.kpi .val{font-family:"Roboto Condensed",Arial,sans-serif;font-size:30px;font-weight:700;margin:6px 0 2px;line-height:1.1}
+.kpi .cap{font-size:12.5px;color:var(--muted)}
+.kpi .ico{position:absolute;right:14px;top:14px;width:34px;height:34px;border-radius:10px;background:color-mix(in srgb,var(--primary) 22%,transparent)}
+.kpi .ico.gray{background:color-mix(in srgb,var(--accent) 22%,transparent)}
+.kpi .ico.purple{background:var(--purple-soft)}
+.kpi .ico.red{background:var(--danger-soft)}
+.kpi .ico.green{background:var(--ok-soft)}
+.section-label{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--primary-strong)}
+.chart-box{position:relative;height:260px}
+.chart-box.tall{height:300px}
+.chart-box.short{height:210px}
+
+/* ---------- Forms ---------- */
+.filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;align-items:end}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field label{font-size:12px;font-weight:600;color:var(--text)}
+.field label .req{color:var(--danger)}
+.input,select.input,textarea.input{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px 11px;min-height:40px}
+textarea.input{min-height:90px;resize:vertical}
+.input:focus{outline:2px solid color-mix(in srgb,var(--primary) 60%,transparent);border-color:var(--primary-strong)}
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.form-grid .full{grid-column:1/-1}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.seg button{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px;cursor:pointer;font-size:13px;display:flex;gap:6px;align-items:center;justify-content:center}
+.seg button.on{background:color-mix(in srgb,var(--primary) 20%,var(--surface));border-color:var(--primary-strong);color:var(--primary-strong);font-weight:600}
+.seg button.on.bad{background:var(--danger-soft);border-color:var(--danger);color:var(--danger)}
+.seg button::before{content:"";width:12px;height:12px;border-radius:50%;border:1.5px solid currentColor;flex:none}
+.seg button.on::before{background:currentColor;box-shadow:inset 0 0 0 2px var(--surface)}
+.err{color:var(--danger);font-size:12px}
+
+/* ---------- Tables ---------- */
+.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{text-align:left;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700;padding:11px 12px;border-bottom:1px solid var(--line);background:var(--surface-2);white-space:nowrap}
+td{padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+td small{display:block;color:var(--muted);font-size:11.5px}
+td b{font-weight:600}
+.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.actions{display:flex;gap:12px;white-space:nowrap}
+.empty{padding:28px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:12px;background:var(--surface-2)}
+
+/* ---------- Kanban ---------- */
+.kanban{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:start}
+.col{background:var(--surface-2);border:1px solid var(--line);border-radius:14px;padding:10px;min-height:180px}
+.col.drag{outline:2px dashed var(--primary-strong)}
+.col-head{display:flex;align-items:center;justify-content:space-between;padding:4px 4px 10px;gap:8px}
+.col-head b{display:flex;align-items:center;gap:8px;font-family:"Roboto Condensed",Arial,sans-serif;font-size:15px}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+.kcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px;cursor:grab;box-shadow:var(--shadow)}
+.kcard h4{font-size:15px;margin:6px 0 4px}
+.kcard dl{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;margin:8px 0;font-size:12px}
+.kcard dt{color:var(--muted)}
+.kcard dd{margin:0;font-weight:500}
+
+/* ---------- Company / checklist cards ---------- */
+.company{border-top:4px solid var(--text)}
+.ring-row{display:flex;align-items:center;gap:16px}
+.ring-row .chart-box{height:120px;width:140px;flex:none}
+.stat-line{display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding:6px 0;font-size:13px}
+.progress{height:6px;border-radius:6px;background:var(--line);overflow:hidden}
+.progress i{display:block;height:100%;background:var(--ok)}
+.progress i.warn{background:var(--warn)}
+.icard .top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.icard h4{font-size:15px;margin:8px 0 2px}
+.icard .meta{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:12px 0 8px;font-size:12px}
+.icard .meta b{display:block;font-size:14px}
+.icard .foot{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+
+/* ---------- Checklist form ---------- */
+.q{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--surface)}
+.q.bad{border-color:var(--danger);background:color-mix(in srgb,var(--danger) 4%,var(--surface))}
+.q h4{font-size:14px;margin-bottom:8px;font-family:"Roboto",Arial,sans-serif;font-weight:600}
+.evid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.evid .drop{border:1.5px dashed var(--line);border-radius:10px;padding:10px;text-align:center;font-size:12px;color:var(--muted);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:96px;position:relative;overflow:hidden}
+.evid .drop.need{border-color:var(--danger)}
+.evid .drop img{width:100%;height:96px;object-fit:cover;border-radius:6px}
+.evid .drop input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.map-wrap{position:relative;border-radius:12px;background:#1f2328;overflow:hidden;cursor:crosshair;user-select:none;max-width:560px;margin:0 auto}
+.map-wrap.light{background:#f2f4f6}
+.map-wrap svg{display:block;width:100%;height:auto}
+.marker{position:absolute;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;background:#e03131;color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35);pointer-events:none}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.tabs button{border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:6px 12px;font-size:12.5px;cursor:pointer}
+.tabs button.on{background:#1d4ed8;border-color:#1d4ed8;color:#fff}
+.avaria{border:1px solid var(--line);border-radius:14px;padding:14px;background:var(--surface-2)}
+
+/* ---------- Timeline ---------- */
+.tl-day{margin:18px 0 8px;font-weight:700;display:flex;gap:8px;align-items:center}
+.tl-day::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--primary-strong)}
+.tl-item{display:flex;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px;margin-left:14px}
+.avatar{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-size:11px;font-weight:700;flex:none;background:var(--ok-soft);color:var(--ok)}
+.avatar.ma{background:var(--warn-soft);color:var(--warn)}
+.avatar.ab{background:#e3edff;color:#2958d6}
+.avatar.mint{background:color-mix(in srgb,var(--primary) 40%,var(--surface));color:var(--primary-ink)}
+.tl-item .time{margin-left:auto;font-size:12px;color:var(--muted);white-space:nowrap}
+
+/* ---------- Personalização preview ---------- */
+.preview{display:grid;grid-template-columns:150px 1fr;border:1px solid var(--line);border-radius:14px;overflow:hidden;min-height:220px}
+.preview .pv-side{padding:12px;display:flex;flex-direction:column;gap:8px}
+.preview .pv-side span{background:rgba(255,255,255,.55);border-radius:8px;padding:6px 8px;font-size:12px;font-weight:600}
+.preview .pv-main{padding:16px;background:var(--surface-2);display:flex;flex-direction:column;gap:10px}
+.color-row{display:flex;gap:8px;align-items:center}
+.color-row input[type=color]{width:52px;height:40px;border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:3px;cursor:pointer}
+
+/* ---------- Users ---------- */
+.ucard{display:grid;grid-template-columns:auto 1fr;gap:12px}
+.ucard .row1{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.ucard .info{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
+.ucard .info div{background:var(--surface-2);border-radius:10px;padding:8px 10px;font-size:12.5px}
+.ucard .info small{display:block;color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;font-weight:700}
+.ucard .btns{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+
+/* ---------- Modal & toast ---------- */
+.modal-back{position:fixed;inset:0;background:rgba(10,20,24,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:100}
+.modal{background:var(--surface);border-radius:18px;width:min(720px,100%);max-height:calc(100% - 20px);display:flex;flex-direction:column;box-shadow:0 30px 80px rgba(0,0,0,.3)}
+.modal.wide{width:min(980px,100%)}
+.modal-head{display:flex;justify-content:space-between;align-items:flex-start;padding:18px 20px 12px;border-bottom:1px solid var(--line);gap:12px}
+.modal-head h3{font-size:20px}
+.modal-body{padding:16px 20px;overflow:auto}
+.modal-foot{display:flex;justify-content:space-between;gap:10px;padding:12px 20px;border-top:1px solid var(--line)}
+.toasts{position:fixed;right:18px;bottom:calc(18px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px;z-index:200}
+.toast{background:var(--ok-soft);color:var(--ok);border:1px solid color-mix(in srgb,var(--ok) 30%,transparent);border-radius:12px;padding:10px 14px;font-weight:600;font-size:13px;box-shadow:var(--shadow);max-width:340px}
+.toast.err{background:var(--danger-soft);color:var(--danger)}
+
+/* ---------- Login ---------- */
+.login{min-height:100%;height:100%;display:grid;grid-template-columns:1.1fr 1fr}
+.login-art{background:var(--sidebar);color:var(--sidebar-ink);padding:48px;display:flex;flex-direction:column;justify-content:space-between;gap:24px}
+.login-art h2{font-size:44px;line-height:1.05;max-width:13ch}
+.login-art p{max-width:46ch;font-size:15px}
+.login-form{display:flex;align-items:center;justify-content:center;padding:32px;background:var(--bg)}
+.login-form .card{width:min(420px,100%);padding:28px}
+
+/* ---------- Responsive ---------- */
+@media (max-width:1100px){.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.g3{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:900px){
+  .app{grid-template-columns:1fr}
+  .sidebar{position:fixed;left:0;top:0;bottom:0;width:260px;z-index:60;transform:translateX(-100%);transition:transform .2s ease;padding-top:env(safe-area-inset-top,0px)}
+  .app.nav-open .sidebar{transform:none}
+  .app.nav-open .scrim{display:block;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:50}
+  .menu-btn{display:grid;place-items:center}
+  .g2,.kanban{grid-template-columns:1fr}
+  .login{grid-template-columns:1fr;height:auto}
+  .login-art{padding:28px}
+  .login-art h2{font-size:32px}
+  .topbar{padding:10px 14px}
+  .content{padding:16px}
+  .demo-strip{padding:8px 14px}
+}
+@media (max-width:600px){
+  .g4,.g3{grid-template-columns:1fr}
+  .form-grid{grid-template-columns:1fr}
+  .ucard .info,.ucard .btns{grid-template-columns:1fr}
+  .topbar .pill:not(.online){display:none}
+  .page-head h1{font-size:28px}
+  .evid{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+</style>
+</head>
+<body>
+<div id="root"></div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+<script>
+/* ===== Utilitários ===== */
+const pad = n => String(n).padStart(2, "0");
+const todayISO = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
+const addDays = (iso, n) => { const d = parseISO(iso); d.setDate(d.getDate() + n); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
+// Datas guardadas como AAAA-MM-DD e lidas no fuso local (evita o "dia a menos").
+function parseISO(s) { if (!s) return null; const [y, m, d] = s.slice(0, 10).split("-").map(Number); return new Date(y, m - 1, d); }
+const fmtDate = s => { if (!s) return "—"; const d = parseISO(s); return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`; };
+const fmtDateTime = s => { if (!s) return "—"; const d = new Date(s); return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}, ${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+const fmtTime = s => { const d = new Date(s); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+const BRL = v => (Number(v) || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+const NUM = (v, dec = 0) => (Number(v) || 0).toLocaleString("pt-BR", { minimumFractionDigits: dec, maximumFractionDigits: dec });
+const daysBetween = (a, b) => Math.round((parseISO(b) - parseISO(a)) / 86400000);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const uid = p => p + Math.random().toString(36).slice(2, 9);
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+/* ===== Itens do checklist ===== */
+const CHECK_ITEMS = [
+  { id: "oleo", q: "Nível do óleo do motor", opts: ["Normal", "Abaixo"] },
+  { id: "agua", q: "Nível de água do radiador", opts: ["Normal", "Abaixo"] },
+  { id: "freio", q: "Nível do fluido de freio", opts: ["Normal", "Abaixo"] },
+  { id: "pneus", q: "Pneus calibrados e em bom estado?", opts: ["Sim", "Não"] },
+  { id: "luzes", q: "Funcionamento de luzes", opts: ["Conforme", "Não conforme"] },
+  { id: "limpador", q: "Limpador funcionando?", opts: ["Sim", "Não"] },
+  { id: "buzina", q: "Buzina funcionando?", opts: ["Sim", "Não"] },
+  { id: "cintos", q: "Cintos em bom estado?", opts: ["Sim", "Não"] },
+  { id: "painel", q: "Painel de instrumentos sem alerta?", opts: ["Sim", "Não"] },
+  { id: "vazamento", q: "Há vazamento sob o veículo?", opts: ["Não", "Sim"] },
+  { id: "doc", q: "Documentação do veículo", opts: ["OK", "Não conforme"] },
+  { id: "triangulo", q: "Triângulo disponível?", opts: ["Sim", "Não"] },
+  { id: "estepe", q: "Estepe disponível e em bom estado?", opts: ["Sim", "Não"] }
+];
+// A primeira opção é sempre a resposta conforme.
+const isBad = (item, ans) => ans && ans !== item.opts[0];
+
+const MODULES = [
+  ["painel", "PA", "Painel"], ["empresas", "EM", "Empresas"], ["veiculos", "VE", "Veículos"], ["motoristas", "MO", "Motoristas"],
+  ["abastecimentos", "AB", "Abastecimentos"], ["manutencoes", "MA", "Manutenções"], ["checklist", "CK", "Checklist do veículo"],
+  ["planos", "PP", "Planos preventivos"], ["documentos", "DO", "Documentos"], ["alertas", "AL", "Alertas"],
+  ["relatorios", "RE", "Relatórios"], ["centros", "CC", "Centros de custo"], ["auditoria", "AU", "Auditoria"],
+  ["personalizacao", "PE", "Personalização"], ["usuarios", "US", "Usuários e acessos"]
+];
+
+/* ===== Base fictícia ===== */
+function seedDB() {
+  const r = rng(20260927), T = todayISO();
+  const pick = a => a[Math.floor(r() * a.length)];
+  const db = {};
+  db.empresas = [
+    { id: "c1", nome: "ATLAS VIGILÂNCIA PATRIMONIAL", cnpj: "12.345.678/0001-00", cidade: "Vila Velha", servicos: ["Vigilância", "Monitoramento"], postos: 42 },
+    { id: "c2", nome: "HORIZONTE FACILITIES", cnpj: "98.765.432/0001-00", cidade: "Serra", servicos: ["Portaria", "Limpeza", "Recepção"], postos: 18 }
+  ];
+  db.centros = [
+    { id: "cc1", codigo: "0001", nome: "SUPERVISÃO ATLAS", tipo: "OPERAÇÃO", status: "Ativo" },
+    { id: "cc2", codigo: "0002", nome: "SUPERVISÃO HORIZONTE", tipo: "OPERAÇÃO", status: "Ativo" },
+    { id: "cc3", codigo: "0003", nome: "CONTRATO PORTO NORTE", tipo: "OPERAÇÃO", status: "Ativo" },
+    { id: "cc4", codigo: "0004", nome: "CONTRATO SHOPPING AURORA", tipo: "OPERAÇÃO", status: "Ativo" },
+    { id: "cc5", codigo: "0005", nome: "CONTRATO INDÚSTRIA DELTA", tipo: "OPERAÇÃO", status: "Ativo" }
+  ];
+  const V = [
+    ["RDM4A21", "FIAT MOBI", "Carro", "c1", "cc1", 48210, "Ativo"], ["QTE8B37", "FIAT ARGO DRIVE", "Carro", "c1", "cc1", 61890, "Ativo"],
+    ["SKL2C54", "VOLKSWAGEN GOL", "Carro", "c2", "cc2", 87430, "Disponível"], ["PPN5D16", "RENAULT KWID", "Carro", "c2", "cc4", 33120, "Ativo"],
+    ["RJX7E82", "FIAT MOBI", "Carro", "c1", "cc3", 55670, "Ativo"], ["TAB3F49", "FIAT ARGO DRIVE", "Carro", "c1", "cc5", 21940, "Ativo"],
+    ["SGE1G05", "HONDA NXR 160 BROS", "Moto", "c1", "cc1", 18230, "Ativo"], ["RVA6H73", "HONDA NXR 160 BROS", "Moto", "c1", "cc3", 26410, "Em manutenção"],
+    ["QXM9J28", "HONDA CG 160", "Moto", "c2", "cc2", 14870, "Ativo"], ["SFT4K61", "YAMAHA CROSSER 150", "Moto", "c1", "cc5", 9340, "Ativo"],
+    ["RNB8L14", "HONDA CG 160", "Moto", "c2", "cc4", 31280, "Disponível"], ["TCD2M97", "VOLKSWAGEN SAVEIRO", "Carro", "c1", "cc3", 72550, "Ativo"],
+    ["SHP5N33", "FIAT STRADA", "Carro", "c2", "cc2", 40210, "Inativo"], ["QPL7P40", "HONDA NXR 160 BROS", "Moto", "c1", "cc1", 12090, "Ativo"]
+  ];
+  db.veiculos = V.map((v, i) => ({ id: "v" + (i + 1), placa: v[0], modelo: v[1], tipo: v[2], empresa: v[3], centro: v[4], km: v[5], status: v[6], combustivel: v[0] === "RNB8L14" ? "Gasolina" : "Flex", ano: 2020 + (i % 5) }));
+  const M = [
+    ["Carlos Henrique Duarte", "AB", 420, "c1"], ["Mariana Lopes Figueira", "B", 38, "c1"], ["Rodrigo Almeida Prates", "AB", 12, "c1"],
+    ["Juliana Costa Menezes", "B", 890, "c2"], ["Felipe Andrade Rocha", "AB", 250, "c1"], ["Thiago Souza Barreto", "A", 55, "c1"],
+    ["Aline Ferreira Campos", "AB", -5, "c2"], ["Bruno Castro Nogueira", "AB", 610, "c1"], ["Patrícia Ramos Vieira", "B", 150, "c2"],
+    ["Leonardo Pires Matos", "AB", 25, "c1"], ["Renata Oliveira Brandão", "B", 1200, "c2"], ["Gustavo Teixeira Lima", "AB", 75, "c1"]
+  ];
+  const vehOrder = ["v1", "v2", "v7", "v4", "v5", "v10", "v3", "v6", "v9", "v8", "v11", "v12"];
+  db.motoristas = M.map((m, i) => ({ id: "m" + (i + 1), nome: m[0], categoria: m[1], cnh: String(10000000000 + Math.floor(r() * 89999999999)).slice(0, 11), validade: addDays(T, m[2]), empresa: m[3], veiculo: vehOrder[i], matricula: String(100 + i * 7), status: i === 10 ? "Inativo" : "Ativo" }));
+  const POSTOS = ["Auto Posto Litoral", "Posto Serra Azul", "Rede Via Norte", "Posto Ilha Bela", "Auto Posto Jardim"];
+  db.abastecimentos = [];
+  const activeV = db.veiculos.filter(v => v.status !== "Inativo");
+  for (let i = 0; i < 46; i++) {
+    const v = pick(activeV), moto = v.tipo === "Moto";
+    const drv = db.motoristas.find(m => m.veiculo === v.id) || pick(db.motoristas);
+    const comb = moto ? "Gasolina" : (r() < .22 ? "Etanol" : "Gasolina");
+    const litros = +(moto ? 6 + r() * 7 : 22 + r() * 22).toFixed(2);
+    const preco = comb === "Etanol" ? 4.39 + r() * .3 : 6.09 + r() * .35;
+    db.abastecimentos.push({ id: "a" + i, data: addDays(T, -Math.floor(r() * 52)), veiculo: v.id, motorista: drv.id, posto: pick(POSTOS), combustivel: comb, litros, valor: +(litros * preco).toFixed(2), centro: v.centro, km: v.km - Math.floor(r() * 900), comprovantes: r() < .8 ? 1 : 0 });
+  }
+  db.abastecimentos.sort((a, b) => b.data.localeCompare(a.data));
+  const FORN = ["Oficina Motor Forte", "Centro Automotivo Rota 101", "Moto Peças Litoral", "Pneus & Cia", "Auto Elétrica Faísca"];
+  const MAN = [
+    ["Troca de óleo e filtro", "v1", "Preventiva", "Média", "conformidade", 0, -34, 90, 145],
+    ["Troca de pastilhas de freio", "v7", "Corretiva", "Alta", "conformidade", 2, -27, 80, 160],
+    ["Alinhamento e balanceamento", "v2", "Preventiva", "Baixa", "conformidade", 3, -21, 120, 0],
+    ["Troca do kit relação", "v8", "Corretiva", "Alta", "andamento", 2, -2, 110, 289.9],
+    ["Revisão dos 60.000 km", "v2", "Preventiva", "Média", "conformidade", 1, -15, 380, 612.4],
+    ["Substituição de lâmpada do farol", "v5", "Corretiva", "Baixa", "conformidade", 4, -11, 0, 38],
+    ["Troca de pneu traseiro", "v9", "Corretiva", "Média", "colocar", 3, 3, 40, 329],
+    ["Reparo no para-choque dianteiro", "v6", "Corretiva", "Média", "colocar", 0, 6, 350, 180],
+    ["Troca da bateria", "v12", "Corretiva", "Alta", "conformidade", 4, -6, 0, 489],
+    ["Revisão elétrica do painel", "v4", "Corretiva", "Média", "andamento", 4, -1, 220, 95]
+  ];
+  db.manutencoes = MAN.map((m, i) => {
+    const v = db.veiculos.find(x => x.id === m[1]);
+    return { id: "mt" + i, titulo: m[0], veiculo: m[1], tipo: m[2], prioridade: m[3], status: m[4], fornecedor: FORN[m[5]], programada: addDays(T, m[6]), inicio: m[4] !== "colocar" ? addDays(T, m[6]) : "", conclusao: m[4] === "conformidade" ? addDays(T, m[6] + 1) : "", hodometro: v.km - 200, maoDeObra: m[7], pecas: m[8], outros: 0, responsavel: "Gestor de Frotas", centro: v.centro, obs: "" };
+  });
+  db.custosPosto = [
+    { id: "cp1", data: addDays(T, -18), centro: "cc3", posto: "Posto Porto Norte — Portão 2", descricao: "Lavagem de viatura", valor: 80 },
+    { id: "cp2", data: addDays(T, -9), centro: "cc4", posto: "Shopping Aurora — Doca", descricao: "Estacionamento", valor: 45 },
+    { id: "cp3", data: addDays(T, -4), centro: "cc5", posto: "Indústria Delta — Guarita", descricao: "Chaveiro", valor: 120 }
+  ];
+  // Checklists
+  db.checklists = [];
+  const ckV = ["v7", "v1", "v2", "v10", "v5", "v9", "v4", "v14", "v6"];
+  ckV.forEach((vid, i) => {
+    const v = db.veiculos.find(x => x.id === vid);
+    const drv = db.motoristas.find(m => m.veiculo === vid) || db.motoristas[i % 12];
+    const respostas = {}, evid = {}, desc = {};
+    CHECK_ITEMS.forEach(it => {
+      const bad = (i % 3 === 0 && (it.id === "freio" || it.id === "pneus")) || (i === 4 && it.id === "luzes") || (i === 7 && it.id === "doc");
+      respostas[it.id] = bad ? it.opts[1] : it.opts[0];
+      if (bad) desc[it.id] = it.id === "pneus" ? "Pneu traseiro com desgaste irregular." : it.id === "freio" ? "Fluido abaixo do mínimo; completar e verificar vazamento." : it.id === "luzes" ? "Lanterna traseira esquerda queimada." : "CRLV físico não estava no veículo.";
+    });
+    const avarias = [];
+    if (i === 0) avarias.push({ local: "Para-lama dianteiro", gravidade: "Baixa", descricao: "Pequeno amassado com risco na pintura.", marcas: [{ tipo: "moto", vista: "lado_esquerdo", x: 24, y: 52 }, { tipo: "moto", vista: "frontal", x: 50, y: 60 }] });
+    if (i === 3) avarias.push({ local: "Tanque", gravidade: "Média", descricao: "Arranhão lateral no tanque.", marcas: [{ tipo: "moto", vista: "lado_direito", x: 55, y: 36 }] });
+    if (i === 4) avarias.push({ local: "Porta traseira esquerda", gravidade: "Média", descricao: "Amassado na porta após manobra.", marcas: [{ tipo: "carro", vista: "lado_esquerdo", x: 58, y: 55 }] });
+    const d = new Date(); d.setDate(d.getDate() - [0, 1, 2, 4, 6, 8, 11, 13, 17][i]); d.setHours(6 + (i * 3) % 14, (i * 17) % 60);
+    db.checklists.push({ id: "ck" + i, data: d.toISOString(), veiculo: vid, motorista: drv.id, matricula: drv.matricula, km: v.km - i * 30, respostas, evid, desc, obs: i === 0 ? "Veículo liberado para a ronda com ressalvas." : "", temAvaria: avarias.length > 0, avarias });
+  });
+  db.planos = [
+    { id: "pl1", titulo: "Troca de óleo a cada 10.000 km", veiculo: "v2", periodicidade: "10.000 km", proxima: addDays(T, 20) },
+    { id: "pl2", titulo: "Revisão do kit relação das motos", veiculo: "v7", periodicidade: "Semestral", proxima: addDays(T, 45) },
+    { id: "pl3", titulo: "Calibragem e rodízio de pneus", veiculo: "v12", periodicidade: "Mensal", proxima: addDays(T, 4) }
+  ];
+  db.documentos = [
+    { id: "d1", nome: "CRLV 2026", tipo: "Veículo", ref: "v3", vencimento: addDays(T, 9), arquivo: "crlv-skl2c54.pdf" },
+    { id: "d2", nome: "CRLV 2026", tipo: "Veículo", ref: "v1", vencimento: addDays(T, 190), arquivo: "crlv-rdm4a21.pdf" },
+    { id: "d3", nome: "Apólice de seguro", tipo: "Veículo", ref: "v2", vencimento: addDays(T, 240), arquivo: "seguro-qte8b37.pdf" },
+    { id: "d4", nome: "Laudo de vistoria", tipo: "Veículo", ref: "v12", vencimento: addDays(T, 22), arquivo: "vistoria-tcd2m97.pdf" },
+    { id: "d5", nome: "CNH digital", tipo: "Motorista", ref: "m3", vencimento: addDays(T, 12), arquivo: "cnh-rodrigo.pdf" },
+    { id: "d6", nome: "CNH digital", tipo: "Motorista", ref: "m7", vencimento: addDays(T, -5), arquivo: "cnh-aline.pdf" },
+    { id: "d7", nome: "Apólice de seguro", tipo: "Veículo", ref: "v7", vencimento: addDays(T, 310), arquivo: "seguro-sge1g05.pdf" },
+    { id: "d8", nome: "Curso de direção defensiva", tipo: "Motorista", ref: "m1", vencimento: addDays(T, 400), arquivo: "certificado-carlos.pdf" }
+  ];
+  db.alertas = [
+    { id: "al1", titulo: "FALTA DE LANÇAMENTOS DIÁRIOS", descricao: "A supervisão não está lançando de forma consecutiva os abastecimentos e manutenções. Os lançamentos devem ser feitos diariamente para manter o painel confiável.", prioridade: "Crítica", status: "Aberto", destinatarios: ["Supervisor Diurno", "Supervisor Noturno", "Gestor de Frotas"], prazo: addDays(T, 3) },
+    { id: "al2", titulo: "CRLV DO VEÍCULO SKL2C54 A VENCER", descricao: "Providenciar o licenciamento antes do vencimento para evitar a retenção do veículo.", prioridade: "Alta", status: "Aberto", destinatarios: ["Gestor de Frotas"], prazo: addDays(T, 9) },
+    { id: "al3", titulo: "REVISÃO DAS MOTOS DO CONTRATO PORTO NORTE", descricao: "Agendar revisão preventiva das motos antes da troca de escala.", prioridade: "Média", status: "Encerrado", destinatarios: ["Supervisor Diurno"], prazo: addDays(T, -6) }
+  ];
+  const all = MODULES.map(m => m[0]);
+  const sup = ["painel", "empresas", "veiculos", "motoristas", "abastecimentos", "manutencoes", "checklist", "planos", "documentos", "alertas", "relatorios", "centros", "auditoria"];
+  const ago = (d, h) => { const x = new Date(); x.setDate(x.getDate() - d); x.setHours(h, 12); return x.toISOString(); };
+  db.usuarios = [
+    { id: "u0", nome: "Usuário Demonstração", email: "demo@primefrotas.demo", perfil: "Administrador", status: "Ativo", modulos: all, ultimo: new Date().toISOString() },
+    { id: "u1", nome: "Supervisor Diurno", email: "supervisor.diurno@primefrotas.demo", perfil: "Supervisor", status: "Ativo", modulos: sup, ultimo: ago(0, 7) },
+    { id: "u2", nome: "Supervisor Noturno", email: "supervisor.noturno@primefrotas.demo", perfil: "Supervisor", status: "Ativo", modulos: sup, ultimo: ago(1, 23) },
+    { id: "u3", nome: "Gestor de Frotas", email: "gestor.frotas@primefrotas.demo", perfil: "Gestor", status: "Ativo", modulos: all.filter(m => m !== "usuarios"), ultimo: ago(0, 9) },
+    { id: "u4", nome: "Financeiro", email: "financeiro@primefrotas.demo", perfil: "Consulta", status: "Ativo", modulos: ["painel", "abastecimentos", "manutencoes", "relatorios", "centros"], ultimo: ago(3, 14) }
+  ];
+  db.auditoria = [
+    { t: ago(0, 8), quem: "Supervisor Diurno", perfil: "Supervisor", mod: "Checklists", code: "CK", acao: "criou o checklist do veículo SGE1G05", det: "Alteração registrada em Checklists." },
+    { t: ago(0, 7), quem: "Supervisor Diurno", perfil: "Supervisor", mod: "Abastecimentos", code: "AB", acao: "criou abastecimento do veículo RDM4A21", det: "32,4 L · Auto Posto Litoral" },
+    { t: ago(1, 18), quem: "Gestor de Frotas", perfil: "Gestor", mod: "Manutenções", code: "MA", acao: "atualizou a manutenção “Troca do kit relação”", det: "RVA6H73 · Em manutenção · Moto Peças Litoral" },
+    { t: ago(1, 16), quem: "Gestor de Frotas", perfil: "Gestor", mod: "Manutenções", code: "MA", acao: "concluiu a manutenção “Troca da bateria”", det: "TCD2M97 · Em conformidade · Auto Elétrica Faísca" },
+    { t: ago(1, 23), quem: "Supervisor Noturno", perfil: "Supervisor", mod: "Checklists", code: "CK", acao: "criou o checklist do veículo RDM4A21", det: "Alteração registrada em Checklists." },
+    { t: ago(2, 22), quem: "Supervisor Noturno", perfil: "Supervisor", mod: "Abastecimentos", code: "AB", acao: "criou abastecimento do veículo QXM9J28", det: "9,1 L · Rede Via Norte" },
+    { t: ago(3, 10), quem: "Usuário Demonstração", perfil: "Administrador", mod: "Alertas", code: "AL", acao: "criou o alerta “Falta de lançamentos diários”", det: "Prioridade crítica · 3 destinatários" },
+    { t: ago(4, 9), quem: "Financeiro", perfil: "Consulta", mod: "Relatórios", code: "RE", acao: "exportou o relatório de abastecimentos", det: "Formato Excel" }
+  ];
+  return db;
+}
+
+/* ===== Desenhos dos veículos (vetoriais, sem imagens de terceiros) ===== */
+function vehicleSVG(tipo, vista) {
+  const W = 600, H = 340;
+  const flip = vista === "lado_direito";
+  const base = vista === "lado_direito" ? "lado_esquerdo" : vista;
+  let g = "";
+  if (tipo === "carro") {
+    const body = "#f5f7f9", ln = "#27313b", glass = "#9db4c7", tire = "#1b2026", rim = "#a9b3bd";
+    if (base === "lado_esquerdo") g = `
+      <ellipse cx="300" cy="286" rx="250" ry="14" fill="#000" opacity=".12"/>
+      <path d="M58 250 L58 205 Q60 184 92 178 L172 170 L236 118 Q250 106 276 105 L392 105 Q418 106 436 120 L494 168 L534 176 Q564 183 566 208 L566 250 Z" fill="${body}" stroke="${ln}" stroke-width="3"/>
+      <path d="M250 164 L268 128 Q274 118 288 118 L324 118 L324 164 Z M336 118 L390 118 Q404 119 414 130 L446 164 L336 164 Z" fill="${glass}" stroke="${ln}" stroke-width="2"/>
+      <path d="M330 118 L330 248 M200 170 L200 248 M460 170 L460 248" stroke="${ln}" stroke-width="2" fill="none"/>
+      <rect x="276" y="186" width="26" height="6" rx="3" fill="${ln}"/><rect x="398" y="186" width="26" height="6" rx="3" fill="${ln}"/>
+      <rect x="60" y="192" width="14" height="22" rx="3" fill="#d63a3a"/><rect x="546" y="188" width="18" height="16" rx="4" fill="#f6c343"/>
+      <path d="M58 228 L566 228" stroke="${ln}" stroke-width="1.5" opacity=".35"/>
+      <circle cx="160" cy="252" r="44" fill="${tire}"/><circle cx="160" cy="252" r="22" fill="${rim}"/>
+      <circle cx="462" cy="252" r="44" fill="${tire}"/><circle cx="462" cy="252" r="22" fill="${rim}"/>`;
+    else if (base === "frontal" || base === "traseira") {
+      const front = base === "frontal";
+      g = `
+      <ellipse cx="300" cy="300" rx="210" ry="14" fill="#000" opacity=".12"/>
+      <rect x="120" y="248" width="56" height="56" rx="10" fill="${tire}"/><rect x="424" y="248" width="56" height="56" rx="10" fill="${tire}"/>
+      <path d="M110 180 Q112 150 150 144 L190 84 Q198 72 214 72 L386 72 Q402 72 410 84 L450 144 Q488 150 490 180 L490 272 Q490 284 478 284 L122 284 Q110 284 110 272 Z" fill="${body}" stroke="${ln}" stroke-width="3"/>
+      <path d="M200 90 L400 90 L432 142 L168 142 Z" fill="${glass}" stroke="${ln}" stroke-width="2"/>
+      ${front ? `<rect x="92" y="126" width="30" height="20" rx="5" fill="${body}" stroke="${ln}" stroke-width="2"/><rect x="478" y="126" width="30" height="20" rx="5" fill="${body}" stroke="${ln}" stroke-width="2"/>
+      <path d="M130 170 L200 168 L204 196 L136 198 Z M470 170 L400 168 L396 196 L464 198 Z" fill="#fff8d6" stroke="${ln}" stroke-width="2"/>
+      <rect x="230" y="178" width="140" height="30" rx="8" fill="#2c343d"/><circle cx="300" cy="193" r="10" fill="${rim}"/>` :
+      `<path d="M126 168 L206 166 L206 198 L130 200 Z M474 168 L394 166 L394 198 L470 200 Z" fill="#d63a3a" stroke="${ln}" stroke-width="2"/>
+      <path d="M220 160 L380 160 L380 206 L220 206 Z" fill="none" stroke="${ln}" stroke-width="2" opacity=".5"/>`}
+      <rect x="250" y="226" width="100" height="30" rx="4" fill="#fff" stroke="${ln}" stroke-width="2"/><text x="300" y="247" text-anchor="middle" font-family="Arial" font-weight="700" font-size="16" fill="${ln}">ABC1D23</text>
+      <path d="M118 262 L482 262" stroke="${ln}" stroke-width="2" opacity=".4"/>`;
+    } else g = `
+      <ellipse cx="300" cy="174" rx="264" ry="98" fill="#000" opacity=".08"/>
+      <rect x="54" y="86" width="492" height="168" rx="70" fill="${body}" stroke="${ln}" stroke-width="3"/>
+      <path d="M190 96 Q205 170 190 244 L240 234 Q252 170 240 106 Z" fill="${glass}" stroke="${ln}" stroke-width="2"/>
+      <path d="M430 104 Q444 170 430 236 L468 228 Q478 170 468 112 Z" fill="${glass}" stroke="${ln}" stroke-width="2"/>
+      <rect x="246" y="104" width="182" height="132" rx="18" fill="#e9edf1" stroke="${ln}" stroke-width="2"/>
+      <rect x="208" y="72" width="22" height="16" rx="4" fill="${body}" stroke="${ln}" stroke-width="2"/><rect x="208" y="252" width="22" height="16" rx="4" fill="${body}" stroke="${ln}" stroke-width="2"/>
+      <rect x="58" y="112" width="10" height="26" rx="3" fill="#f6c343"/><rect x="58" y="202" width="10" height="26" rx="3" fill="#f6c343"/>
+      <rect x="532" y="110" width="10" height="30" rx="3" fill="#d63a3a"/><rect x="532" y="200" width="10" height="30" rx="3" fill="#d63a3a"/>`;
+  } else {
+    const red = "#d42a2a", ln = "#c9d1d9", dark = "#0e1115", tire = "#2b3139";
+    if (base === "lado_esquerdo") g = `
+      <ellipse cx="300" cy="306" rx="240" ry="10" fill="#000" opacity=".4"/>
+      <circle cx="150" cy="250" r="66" fill="${tire}" stroke="#4a525c" stroke-width="10"/><circle cx="150" cy="250" r="16" fill="#8a939d"/>
+      <circle cx="452" cy="250" r="66" fill="${tire}" stroke="#4a525c" stroke-width="10"/><circle cx="452" cy="250" r="16" fill="#8a939d"/>
+      <path d="M150 250 L230 150 M452 250 L420 110" stroke="#a7b0ba" stroke-width="9" stroke-linecap="round"/>
+      <path d="M232 214 L300 214 L330 262 L262 262 Z" fill="#555e68" stroke="${ln}" stroke-width="2"/>
+      <path d="M280 250 Q210 262 150 250" stroke="#9aa3ad" stroke-width="7" fill="none"/>
+      <path d="M92 180 Q140 160 214 168 L236 150 L300 150 L292 182 L224 196 Z" fill="${dark}" stroke="${ln}" stroke-width="2"/>
+      <path d="M92 178 Q100 196 130 196 L214 190" stroke="${red}" stroke-width="8" fill="none" stroke-linecap="round"/>
+      <path d="M284 150 Q300 116 360 116 L412 124 Q404 176 330 204 L290 206 Z" fill="${red}" stroke="${ln}" stroke-width="2"/>
+      <path d="M396 106 L438 96 L452 128 Q430 146 404 140 Z" fill="${red}" stroke="${ln}" stroke-width="2"/>
+      <path d="M404 96 L380 76 M404 96 L372 90" stroke="#a7b0ba" stroke-width="5" stroke-linecap="round"/>
+      <path d="M404 196 Q446 180 476 200" stroke="${red}" stroke-width="10" fill="none" stroke-linecap="round"/>
+      <rect x="436" y="108" width="18" height="16" rx="4" fill="#fff4c2"/>`;
+    else if (base === "frontal" || base === "traseira") {
+      const front = base === "frontal";
+      g = `
+      <ellipse cx="300" cy="318" rx="110" ry="9" fill="#000" opacity=".4"/>
+      <rect x="280" y="206" width="40" height="112" rx="18" fill="${tire}" stroke="#4a525c" stroke-width="5"/>
+      <path d="M200 112 L400 112" stroke="#a7b0ba" stroke-width="9" stroke-linecap="round"/>
+      <path d="M214 112 L188 64 M386 112 L412 64" stroke="#a7b0ba" stroke-width="5" stroke-linecap="round"/>
+      <ellipse cx="184" cy="56" rx="20" ry="12" fill="${dark}" stroke="${ln}" stroke-width="2"/><ellipse cx="416" cy="56" rx="20" ry="12" fill="${dark}" stroke="${ln}" stroke-width="2"/>
+      ${front ? `
+      <path d="M284 128 L284 236 M316 128 L316 236" stroke="#a7b0ba" stroke-width="8" stroke-linecap="round"/>
+      <path d="M266 208 Q300 190 334 208 L330 226 Q300 212 270 226 Z" fill="${red}" stroke="${ln}" stroke-width="1.5"/>
+      <path d="M270 88 L330 88 L322 60 L278 60 Z" fill="#3a4450" stroke="${ln}" stroke-width="2" opacity=".9"/>
+      <path d="M256 92 L344 92 L334 166 Q300 184 266 166 Z" fill="${red}" stroke="${ln}" stroke-width="2"/>
+      <ellipse cx="300" cy="134" rx="24" ry="17" fill="#fff4c2" stroke="${ln}" stroke-width="2"/>
+      <path d="M240 128 L256 132 M360 128 L344 132" stroke="#f6a53a" stroke-width="7" stroke-linecap="round"/>` : `
+      <path d="M262 150 Q300 132 338 150 L330 196 Q300 206 270 196 Z" fill="${dark}" stroke="${ln}" stroke-width="2"/>
+      <path d="M270 122 L330 122 L336 150 L264 150 Z" fill="#2f363e" stroke="${ln}" stroke-width="2"/>
+      <rect x="280" y="156" width="40" height="16" rx="5" fill="#e0413b"/>
+      <rect x="276" y="178" width="48" height="26" rx="3" fill="#fff" stroke="${ln}" stroke-width="2"/>
+      <path d="M232 164 L258 170 M368 164 L342 170" stroke="#f6a53a" stroke-width="7" stroke-linecap="round"/>`}`;
+    } else g = `
+      <ellipse cx="300" cy="170" rx="250" ry="40" fill="#000" opacity=".3"/>
+      <rect x="40" y="156" width="110" height="28" rx="14" fill="${tire}"/><rect x="450" y="156" width="110" height="28" rx="14" fill="${tire}"/>
+      <path d="M150 170 Q240 130 330 138 L420 150 L420 190 L330 202 Q240 210 150 170 Z" fill="${dark}" stroke="${ln}" stroke-width="2"/>
+      <ellipse cx="360" cy="170" rx="56" ry="34" fill="${red}" stroke="${ln}" stroke-width="2"/>
+      <path d="M430 96 L430 244" stroke="#a7b0ba" stroke-width="9" stroke-linecap="round"/>
+      <ellipse cx="430" cy="86" rx="14" ry="20" fill="${dark}" stroke="${ln}" stroke-width="2"/><ellipse cx="430" cy="254" rx="14" ry="20" fill="${dark}" stroke="${ln}" stroke-width="2"/>
+      <rect x="470" y="160" width="26" height="20" rx="5" fill="#fff4c2"/>`;
+  }
+  const bg = tipo === "moto" ? `<rect width="600" height="340" fill="#1c2025"/><rect width="600" height="340" fill="url(#vg)"/>` : `<rect width="600" height="340" fill="#f1f3f5"/>`;
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${tipo} — ${vista.replace("_", " ")}"><defs><radialGradient id="vg" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="#3a4048"/><stop offset="1" stop-color="#1c2025"/></radialGradient></defs>${bg}<g${flip ? ` transform="translate(600 0) scale(-1 1)"` : ""}>${g}</g></svg>`;
+}
+const VISTAS = [["superior", "Superior"], ["lado_esquerdo", "Lado esquerdo"], ["traseira", "Traseira"], ["lado_direito", "Lado direito"], ["frontal", "Frontal"]];
+
+const DEFAULT_LOGO = "data:image/svg+xml;utf8," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 100"><rect width="120" height="100" rx="18" fill="#fff"/><path d="M18 62 Q22 40 46 36 L78 34 Q92 34 100 46 L104 62 Z" fill="#c8102e"/><path d="M44 42 L56 40 L54 52 L40 54 Z M62 40 L80 40 Q88 41 92 50 L60 52 Z" fill="#fff" opacity=".85"/><circle cx="40" cy="64" r="9" fill="#1b2026"/><circle cx="86" cy="64" r="9" fill="#1b2026"/><text x="60" y="90" text-anchor="middle" font-family="Arial Black,Arial" font-weight="900" font-size="15" fill="#1b2026">PRIME</text></svg>`);
+
+/* ===== Persistência (fica só no navegador de quem visita) ===== */
+const KEY_DB = "primefrotas-demo-db-v1", KEY_CFG = "primefrotas-demo-cfg-v1", KEY_LOGIN = "primefrotas-demo-login";
+const store = {
+  get(k) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } },
+  del(k) { try { localStorage.removeItem(k); } catch (e) {} }
+};
+const DEFAULT_CFG = { nome: "Prime Frotas", logo: null, primary: "#56e1c6", accent: "#5f6368", sidebar: "#72dfd8", theme: "light" };
+let DB = store.get(KEY_DB) || seedDB();
+let CFG = Object.assign({}, DEFAULT_CFG, store.get(KEY_CFG) || {});
+let LOGGED = !!store.get(KEY_LOGIN);
+let alertShown = false;
+const ME = () => DB.usuarios[0];
+function save() { if (!store.set(KEY_DB, DB)) toast("Não foi possível salvar neste navegador. Remova algumas fotos e tente de novo.", "err"); }
+function audit(mod, code, acao, det = "") { DB.auditoria.unshift({ t: new Date().toISOString(), quem: ME().nome, perfil: ME().perfil, mod, code, acao, det }); }
+
+/* ===== Lookups ===== */
+const byId = (arr, id) => DB[arr].find(x => x.id === id);
+const veic = id => byId("veiculos", id) || { placa: "—", modelo: "", tipo: "Carro" };
+const mot = id => byId("motoristas", id) || { nome: "—" };
+const emp = id => byId("empresas", id) || { nome: "—" };
+const cen = id => byId("centros", id) || { codigo: "", nome: "—" };
+const vLabel = id => { const v = veic(id); return `${v.placa} - ${v.modelo}`; };
+const cLabel = id => { const c = cen(id); return c.codigo ? `${c.codigo} - ${c.nome}` : "—"; };
+const manCost = m => (+m.maoDeObra || 0) + (+m.pecas || 0) + (+m.outros || 0);
+const MAN_STATUS = { colocar: "Colocar para manutenção", andamento: "Em manutenção", conformidade: "Em conformidade" };
+function ckStats(c) {
+  const bad = CHECK_ITEMS.filter(it => isBad(it, c.respostas[it.id]));
+  const conf = Math.round((CHECK_ITEMS.length - bad.length) / CHECK_ITEMS.length * 100);
+  return { bad, conf, ok: bad.length === 0 && !c.temAvaria };
+}
+function cnhFaixa(m) { const d = daysBetween(todayISO(), m.validade); return { d, faixa: d > 60 ? "prazo" : d > 30 ? "media" : "renovar" }; }
+function docSit(d) { const n = daysBetween(todayISO(), d.vencimento); return n < 0 ? ["Vencido", "danger"] : n <= 30 ? ["A vencer", "warn"] : ["Válido", "ok"]; }
+
+/* ===== Cores e marca ===== */
+function hexToRgb(h) { h = h.replace("#", ""); if (h.length === 3) h = h.split("").map(c => c + c).join(""); const n = parseInt(h, 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+function lum(h) { const [r, g, b] = hexToRgb(h).map(v => { v /= 255; return v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; }); return .2126 * r + .7152 * g + .0722 * b; }
+function shade(h, t) { const c = hexToRgb(h).map(v => Math.round(v * (1 - t))); return "#" + c.map(v => v.toString(16).padStart(2, "0")).join(""); }
+function applyCfg(cfg = CFG) {
+  const s = document.documentElement.style;
+  s.setProperty("--primary", cfg.primary);
+  s.setProperty("--primary-ink", lum(cfg.primary) > .35 ? shade(cfg.primary, .78) : "#ffffff");
+  s.setProperty("--primary-strong", lum(cfg.primary) > .25 ? shade(cfg.primary, .45) : cfg.primary);
+  s.setProperty("--accent", cfg.accent);
+  s.setProperty("--sidebar", cfg.sidebar);
+  s.setProperty("--sidebar-ink", lum(cfg.sidebar) > .3 ? "#10302b" : "#f3f7f6");
+  if (cfg.theme === "system") document.documentElement.removeAttribute("data-theme");
+  else document.documentElement.setAttribute("data-theme", cfg.theme);
+  document.title = `${cfg.nome} — Demonstração`;
+}
+const logoSrc = (cfg = CFG) => cfg.logo || DEFAULT_LOGO;
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+/* ===== Toast, modal, downloads ===== */
+function toast(msg, kind = "ok") {
+  const box = document.getElementById("toasts"); const el = document.createElement("div");
+  el.className = "toast" + (kind === "err" ? " err" : ""); el.setAttribute("role", "status"); el.textContent = msg; box.appendChild(el);
+  setTimeout(() => el.remove(), 3800);
+}
+let modalOnClose = null;
+function openModal({ title, sub = "", body, foot = "", wide = false, onMount, onClose }) {
+  closeModal();
+  const wrap = document.createElement("div"); wrap.className = "modal-back"; wrap.id = "modal";
+  wrap.innerHTML = `<div class="modal${wide ? " wide" : ""}" role="dialog" aria-modal="true" aria-labelledby="mtitle">
+    <div class="modal-head"><div>${sub ? `<div class="section-label">${sub}</div>` : ""}<h3 id="mtitle">${title}</h3></div><button class="link" data-close>Fechar</button></div>
+    <div class="modal-body">${body}</div>${foot ? `<div class="modal-foot">${foot}</div>` : ""}</div>`;
+  wrap.addEventListener("click", e => { if (e.target === wrap || e.target.closest("[data-close]")) closeModal(); });
+  document.body.appendChild(wrap); modalOnClose = onClose || null;
+  const f = wrap.querySelector("input,select,textarea,button:not([data-close])"); if (f) f.focus();
+  if (onMount) onMount(wrap);
+  return wrap;
+}
+function closeModal() { const m = document.getElementById("modal"); if (m) { m.remove(); if (modalOnClose) { const f = modalOnClose; modalOnClose = null; f(); } } }
+function confirmBox(msg, onYes, yes = "Excluir") {
+  openModal({ title: msg, body: `<p class="muted" style="margin:0">Essa ação não pode ser desfeita.</p>`, foot: `<button class="btn ghost" data-close>Cancelar</button><button class="btn danger" id="yes">${yes}</button>`,
+    onMount: w => w.querySelector("#yes").onclick = () => { closeModal(); onYes(); } });
+}
+let dlPromise = null;
+function getDownloads() { if (!dlPromise) dlPromise = (window.claude && window.claude.use) ? window.claude.use("downloads").catch(() => null) : Promise.resolve(null); return dlPromise; }
+async function saveFile(filename, data) {
+  const dl = await getDownloads();
+  if (!dl) { // Fora do Claude (ex.: Vercel): download padrão do navegador
+    const blob = data instanceof Blob ? data : new Blob([data], { type: filename.endsWith(".json") ? "application/json" : filename.endsWith(".csv") ? "text/csv;charset=utf-8" : "application/octet-stream" });
+    const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000);
+    toast(`Arquivo gerado: ${filename}`); return; }
+  try { await dl.save({ filename, data }); toast(`Arquivo gerado: ${filename}`); }
+  catch (e) { if (e && e.code === "declined") return; toast(e && e.code === "rate_limited" ? "Já existe um download aguardando confirmação." : "Não foi possível gerar o arquivo.", "err"); }
+}
+
+/* ===== Gráficos ===== */
+let charts = [];
+function destroyCharts() { charts.forEach(c => { try { c.destroy(); } catch (e) {} }); charts = []; }
+function chart(id, cfg) {
+  const el = document.getElementById(id); if (!el || typeof Chart === "undefined") { if (el) el.parentElement.innerHTML = `<div class="empty">Gráfico indisponível sem conexão.</div>`; return; }
+  Chart.defaults.font.family = "Roboto, Arial, sans-serif"; Chart.defaults.color = css("--muted"); Chart.defaults.borderColor = css("--line");
+  cfg.options = Object.assign({ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "bottom", labels: { boxWidth: 14, boxHeight: 8 } } } }, cfg.options || {});
+  charts.push(new Chart(el, cfg));
+}
+const moneyAxis = { ticks: { callback: v => NUM(v) } };
+const tipBRL = { callbacks: { label: c => `${c.dataset.label || c.label}: ${BRL(c.parsed.y ?? c.parsed)}` } };
+
+/* ===== Blocos de interface ===== */
+const head = (eyebrow, title, sub, actions = "") => `<div class="page-head"><div><div class="eyebrow">${eyebrow}</div><h1>${title}</h1><p>${sub}</p></div><div class="head-actions">${actions}</div></div>`;
+const kpi = (lbl, val, cap, ico = "") => `<div class="card kpi"><span class="ico ${ico}" aria-hidden="true"></span><div class="lbl">${lbl}</div><div class="val">${val}</div><div class="cap">${cap}</div></div>`;
+const exportBar = (key, title = "Exportar", sub = "Os arquivos seguem o padrão visual dos relatórios do sistema.") =>
+  `<div class="card" style="padding:12px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px"><div><b style="font-size:13px">${title}</b><div class="sub" style="font-size:12px">${sub}</div></div>${exportChips(key)}</div>`;
+const exportChips = key => `<div class="chips">${["pdf", "xlsx", "csv", "json"].map(f => `<button class="chip" data-export="${key}:${f}">${f === "xlsx" ? "Excel" : f.toUpperCase()}</button>`).join("")}</div>`;
+const opts = (list, sel, empty) => (empty ? `<option value="">${empty}</option>` : "") + list.map(([v, l]) => `<option value="${esc(v)}"${String(v) === String(sel) ? " selected" : ""}>${esc(l)}</option>`).join("");
+const vehOpts = () => DB.veiculos.map(v => [v.id, `${v.placa} - ${v.modelo}`]);
+const motOpts = () => DB.motoristas.map(m => [m.id, m.nome]);
+const empOpts = () => DB.empresas.map(e => [e.id, e.nome]);
+const cenOpts = () => DB.centros.map(c => [c.id, `${c.codigo} - ${c.nome}`]);
+const statusTag = s => `<span class="tag ${({ "Ativo": "ok", "Disponível": "", "Em manutenção": "warn", "Inativo": "danger", "Aberto": "warn", "Encerrado": "" })[s] ?? ""}">${esc(s)}</span>`;
+const prioTag = p => `<span class="tag ${({ "Crítica": "danger", "Alta": "danger", "Média": "warn", "Baixa": "" })[p] ?? ""}">${esc(p)}</span>`;
+const val = id => { const el = document.getElementById(id); return el ? el.value : ""; };
+
+/* ===== Filtros por tela ===== */
+const T0 = todayISO();
+const F = {
+  painel: { veiculo: "", ini: addDays(T0, -29), fim: T0, centro: "", empresa: "" },
+  veiculos: { q: "", empresa: "", status: "" }, motoristas: { q: "", empresa: "" },
+  abast: { q: "", veiculo: "", ini: "", fim: "" }, man: { veiculo: "", centro: "", empresa: "", ini: "", fim: "" },
+  ck: { veiculo: "", ini: "", fim: "" }, centros: { q: "" }, aud: { mod: "", quem: "", ini: "", fim: "" },
+  rel: { empresa: "", ini: "", fim: "", veiculo: "", motorista: "", centro: "" }
+};
+const inRange = (d, ini, fim) => (!ini || d.slice(0, 10) >= ini) && (!fim || d.slice(0, 10) <= fim);
+
+/* ===== Shell ===== */
+function shell() {
+  const cur = route().page;
+  return `<div class="app" id="app">
+    <aside class="sidebar" aria-label="Menu principal">
+      <div class="brand"><div class="brand-logo"><img src="${logoSrc()}" alt=""></div><div><b>${esc(CFG.nome)}</b><small>Gestão de frotas</small></div></div>
+      <nav class="nav">${MODULES.filter(m => ME().modulos.includes(m[0])).map(([k, c, l]) => `<a href="#/${k}" class="${cur === k ? "active" : ""}" data-nav><span class="code">${c}</span>${l}</a>`).join("")}</nav>
+      <div class="userbox"><small>${esc(ME().perfil)}</small><b>${esc(ME().nome)}</b><button class="btn block" data-act="logout">Sair</button></div>
+    </aside>
+    <div class="scrim" data-act="closenav"></div>
+    <div class="main" id="main">
+      <header class="topbar"><button class="menu-btn" data-act="opennav" aria-label="Abrir menu"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M2 4h14M2 9h14M2 14h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+        <div class="org"><b>Organização Demonstração</b><span>${esc(ME().nome)} - ${esc(ME().perfil)}</span></div><div class="spacer"></div>
+        <button class="pill" data-act="senha">Minha senha</button><span class="pill online">Online</span></header>
+      <div class="demo-strip"><span><b>Ambiente de demonstração.</b> Todos os dados são fictícios e suas alterações ficam salvas apenas neste navegador.</span><button class="link" data-act="resetdb">Restaurar dados de demonstração</button></div>
+      <main class="content" id="content"></main>
+    </div></div>`;
+}
+function route() { const h = (location.hash || "#/painel").replace(/^#\/?/, "").split("/"); return { page: h[0] || "painel", sub: h[1] || "" }; }
+
+function loginView() {
+  return `<div class="login"><section class="login-art">
+    <div class="brand" style="padding:0"><div class="brand-logo"><img src="${logoSrc()}" alt=""></div><div><b>${esc(CFG.nome)}</b><small>Gestão de frotas</small></div></div>
+    <div><h2>Gestão de frota que a operação entende.</h2><p style="margin-top:14px">Abastecimentos, manutenções, checklist com mapa de avarias, alertas e relatórios em um só portal. Esta é uma demonstração com dados fictícios: explore à vontade.</p></div>
+    <small style="opacity:.8">Demonstração pública · nenhum dado real é exibido</small></section>
+    <section class="login-form"><form class="card" id="loginForm"><h3 style="font-size:26px">Entrar</h3><p class="muted" style="margin:4px 0 18px">O acesso de demonstração já está preenchido.</p>
+      <div class="stack"><div class="field"><label for="le">E-mail</label><input class="input" id="le" type="email" value="demo@primefrotas.demo" autocomplete="username"></div>
+      <div class="field"><label for="lp">Senha</label><input class="input" id="lp" type="password" value="demonstracao" autocomplete="current-password"></div>
+      <button class="btn block" type="submit">Entrar na demonstração</button></div></form></section></div>`;
+}
+
+/* ===== Render ===== */
+function render() {
+  const root = document.getElementById("root");
+  destroyCharts();
+  if (!LOGGED) { root.innerHTML = loginView(); document.getElementById("loginForm").onsubmit = e => { e.preventDefault(); LOGGED = true; store.set(KEY_LOGIN, true); DB.usuarios[0].ultimo = new Date().toISOString(); save(); location.hash = "#/painel"; render(); }; return; }
+  if (!document.getElementById("app")) root.innerHTML = shell();
+  const r = route();
+  document.querySelectorAll(".nav a").forEach(a => a.classList.toggle("active", a.getAttribute("href") === "#/" + r.page));
+  const page = PAGES[r.page] || PAGES.painel;
+  const out = page(r.sub);
+  const c = document.getElementById("content"); c.innerHTML = out.html; if (out.after) out.after(c);
+  if (!alertShown) { alertShown = true; const a = DB.alertas.find(x => x.status === "Aberto" && x.prioridade === "Crítica"); if (a) setTimeout(() => openModal({ sub: "Alerta para você", title: esc(a.titulo), body: `<p style="margin-top:0">${esc(a.descricao)}</p><div class="chips">${prioTag(a.prioridade)}<span class="tag">Prazo ${fmtDate(a.prazo)}</span></div>`, foot: `<span></span><button class="btn" data-close>Ciente</button>` }), 300); }
+}
+function rerender(keepScroll = true) { const m = document.getElementById("main"); const y = m ? m.scrollTop : 0; render(); const m2 = document.getElementById("main"); if (m2 && keepScroll) m2.scrollTop = y; }
+function refreshShell() { const root = document.getElementById("root"); root.innerHTML = ""; render(); }
+
+/* ================= PÁGINAS ================= */
+const PAGES = {};
+
+PAGES.painel = () => {
+  const f = F.painel;
+  const vs = DB.veiculos.filter(v => (!f.empresa || v.empresa === f.empresa) && (!f.centro || v.centro === f.centro) && (!f.veiculo || v.id === f.veiculo));
+  const ids = new Set(vs.map(v => v.id));
+  const ab = DB.abastecimentos.filter(a => ids.has(a.veiculo) && inRange(a.data, f.ini, f.fim));
+  const mn = DB.manutencoes.filter(m => ids.has(m.veiculo) && inRange(m.inicio || m.programada, f.ini, f.fim));
+  const sum = (a, fn) => a.reduce((s, x) => s + fn(x), 0);
+  const comb = sum(ab, a => a.valor), litros = sum(ab, a => a.litros), manT = sum(mn, manCost);
+  const motAtivos = DB.motoristas.filter(m => m.status === "Ativo" && (!f.empresa || m.empresa === f.empresa)).length;
+  const docsVencer = DB.documentos.filter(d => { const n = daysBetween(T0, d.vencimento); return n >= 0 && n <= 30; }).length;
+  const criticos = DB.alertas.filter(a => a.status === "Aberto" && a.prioridade === "Crítica").length;
+  const html = head("Visão geral da frota", "Painel", "Indicadores operacionais e financeiros da frota com filtros aplicados a toda a análise.") + `
+  <div class="card" style="margin-bottom:14px"><b>Filtro geral do painel</b><div class="sub" style="margin-bottom:10px">Os indicadores e gráficos de custos consideram os filtros selecionados.</div>
+    <div class="filters">
+      <div class="field"><label for="fv">Veículo</label><select class="input" id="fv">${opts(vehOpts(), f.veiculo, "Todos os veículos")}</select></div>
+      <div class="field"><label for="fi">Data inicial</label><input class="input" type="date" id="fi" value="${f.ini}"></div>
+      <div class="field"><label for="ff">Data final</label><input class="input" type="date" id="ff" value="${f.fim}"></div>
+      <div class="field"><label for="fc">Centro de custo</label><select class="input" id="fc">${opts(cenOpts(), f.centro, "Todos os centros")}</select></div>
+      <div class="field"><label for="fe">Empresa</label><select class="input" id="fe">${opts(empOpts(), f.empresa, "Todas as empresas")}</select></div>
+      <button class="btn" data-act="painel-filtrar">Aplicar filtros</button>
+    </div></div>
+  <div class="grid g4" style="margin-bottom:14px">
+    ${kpi("Veículos totais", vs.length, `${vs.filter(v => v.status === "Ativo").length} ativos`)}
+    ${kpi("Motoristas ativos", motAtivos, "com cadastro ativo", "purple")}
+    ${kpi("Combustível", BRL(comb), `no período · ${NUM(litros, 1)} litros`, "gray")}
+    ${kpi("Manutenção", BRL(manT), "no período", "green")}
+    ${kpi("Em manutenção", vs.filter(v => v.status === "Em manutenção").length, "veículos parados", "gray")}
+    ${kpi("Documentos a vencer", docsVencer, "nos próximos 30 dias", "purple")}
+    ${kpi("Alertas críticos", criticos, "abertos", "red")}
+  </div>
+  <div class="card" style="margin-bottom:14px"><div class="card-head"><div><div class="section-label">Resumo operacional</div><h3>Abastecimentos, manutenções e motoristas</h3><div class="sub">Consolidado no período, respeitando os filtros do painel.</div></div></div>
+    <div class="grid g3">
+      <a class="card" href="#/abastecimentos" style="text-decoration:none;box-shadow:none;background:var(--surface-2)"><div class="lbl eyebrow">Abastecimentos</div><b style="color:var(--primary-strong)">${ab.length} lançamento(s)</b><div class="sub">${BRL(comb)} · ${NUM(litros, 1)} litros</div></a>
+      <a class="card" href="#/manutencoes" style="text-decoration:none;box-shadow:none;background:var(--surface-2)"><div class="lbl eyebrow">Manutenções</div><b>${mn.length} ordem(ns)</b><div class="sub">${BRL(manT)} no período</div></a>
+      <a class="card" href="#/motoristas" style="text-decoration:none;box-shadow:none;background:var(--surface-2)"><div class="lbl eyebrow">Motoristas</div><b>${motAtivos} ativo(s)</b><div class="sub">Cadastros disponíveis para a operação</div></a>
+    </div></div>
+  <div class="grid g2" style="margin-bottom:14px">
+    <div class="card"><h3>Custos do período</h3><div class="sub">Gasolina, etanol, diesel e manutenção considerados no resumo.</div><div class="chart-box" style="margin-top:10px"><canvas id="c1" aria-label="Custos do período por categoria"></canvas></div></div>
+    <div class="card"><h3>Status da frota</h3><div class="sub">Distribuição operacional da frota filtrada.</div><div class="chart-box" style="margin-top:10px"><canvas id="c2" aria-label="Status da frota"></canvas></div></div>
+    <div class="card"><h3>Custos por veículo</h3><div class="sub">Abastecimentos e manutenções acumulados por veículo.</div><div class="chart-box tall" style="margin-top:10px"><canvas id="c3" aria-label="Custos por veículo"></canvas></div></div>
+    <div class="card"><h3>Custos por centro de custo</h3><div class="sub">Total de abastecimentos e manutenções agrupado por centro de custo.</div><div class="chart-box tall" style="margin-top:10px"><canvas id="c4" aria-label="Custos por centro de custo"></canvas></div></div>
+  </div>
+  <div class="card" style="margin-bottom:14px"><h3>Evolução de gastos</h3><div class="sub">Ações realizadas no período, conforme a data do abastecimento ou da manutenção.</div><div class="chart-box" style="margin-top:10px"><canvas id="c5" aria-label="Evolução de gastos"></canvas></div></div>
+  <div class="card"><h3>Alertas recentes</h3><div class="sub">Ocorrências abertas que precisam de atenção.</div>
+    ${DB.alertas.filter(a => a.status === "Aberto").map(a => `<div class="stat-line" style="padding:12px 0;gap:12px"><div><b>${esc(a.titulo)}</b><div class="sub">${esc(a.descricao)}</div></div><div>${prioTag(a.prioridade)}</div></div>`).join("") || `<div class="empty" style="margin-top:10px">Nenhum alerta aberto.</div>`}</div>`;
+  return { html, after: () => {
+    const byComb = k => sum(ab.filter(a => a.combustivel === k), a => a.valor);
+    chart("c1", { type: "bar", data: { labels: ["Gasolina", "Etanol", "Diesel", "Manutenção"], datasets: [{ data: [byComb("Gasolina"), byComb("Etanol"), byComb("Diesel"), manT], backgroundColor: [css("--red"), "#15a34a", css("--accent"), css("--purple")], borderRadius: 6 }] }, options: { plugins: { legend: { display: false }, tooltip: tipBRL }, scales: { y: moneyAxis } } });
+    const st = ["Ativo", "Disponível", "Em manutenção", "Inativo"].map(s => vs.filter(v => v.status === s).length);
+    chart("c2", { type: "doughnut", data: { labels: ["Ativos", "Disponíveis", "Em manutenção", "Inativos"], datasets: [{ data: st, backgroundColor: [css("--primary"), css("--accent"), "#15a34a", css("--purple")], borderWidth: 2, borderColor: css("--surface") }] }, options: { cutout: "62%" } });
+    const perV = vs.map(v => ({ v, a: sum(ab.filter(x => x.veiculo === v.id), x => x.valor), m: sum(mn.filter(x => x.veiculo === v.id), manCost) })).filter(x => x.a + x.m > 0).sort((a, b) => (b.a + b.m) - (a.a + a.m)).slice(0, 10);
+    chart("c3", { type: "bar", data: { labels: perV.map(x => `${x.v.placa} - ${x.v.modelo}`), datasets: [{ label: "Abastecimento", data: perV.map(x => x.a), backgroundColor: css("--primary"), borderRadius: 4 }, { label: "Manutenção", data: perV.map(x => x.m), backgroundColor: css("--accent"), borderRadius: 4 }] }, options: { plugins: { tooltip: tipBRL }, scales: { x: { stacked: true, ticks: { autoSkip: false, maxRotation: 40, minRotation: 30, font: { size: 10 } } }, y: { stacked: true, ...moneyAxis } } } });
+    const perC = DB.centros.map(c => ({ c, a: sum(ab.filter(x => x.centro === c.id), x => x.valor), m: sum(mn.filter(x => x.centro === c.id), manCost) })).filter(x => x.a + x.m > 0);
+    chart("c4", { type: "bar", data: { labels: perC.map(x => `${x.c.codigo} - ${x.c.nome}`), datasets: [{ label: "Abastecimento", data: perC.map(x => x.a), backgroundColor: "#22b04b", borderRadius: 4 }, { label: "Manutenção", data: perC.map(x => x.m), backgroundColor: css("--purple"), borderRadius: 4 }] }, options: { plugins: { tooltip: tipBRL }, scales: { x: { stacked: true, ticks: { font: { size: 10 } } }, y: { stacked: true, ...moneyAxis } } } });
+    const days = []; if (f.ini && f.fim) { for (let d = f.ini; d <= f.fim && days.length < 400; d = addDays(d, 1)) days.push(d); }
+    chart("c5", { type: "line", data: { labels: days.map(d => fmtDate(d).slice(0, 5)), datasets: [{ label: "Abastecimentos", data: days.map(d => sum(ab.filter(a => a.data === d), a => a.valor)), borderColor: css("--primary-strong"), backgroundColor: css("--primary") + "40", fill: true, tension: .35, pointRadius: 2 }, { label: "Manutenções", data: days.map(d => sum(mn.filter(m => (m.inicio || m.programada) === d), manCost)), borderColor: css("--accent"), tension: .35, pointRadius: 2 }] }, options: { plugins: { tooltip: tipBRL }, scales: { y: moneyAxis } } });
+  } };
+};
+
+PAGES.empresas = () => {
+  const html = head("Grupo empresarial", "Empresas", "Visualize a operação por empresa e acompanhe a frota vinculada em um só lugar.", `<button class="btn" data-form="empresas">Nova empresa</button>`) + exportBar("empresas", "Exportar empresas") + `
+  <div class="grid g3" style="margin-bottom:14px">${kpi("Empresas", DB.empresas.length, "operações cadastradas")}${kpi("Postos", DB.empresas.reduce((s, e) => s + (+e.postos || 0), 0), "postos informados", "purple")}${kpi("Frota vinculada", DB.veiculos.filter(v => DB.empresas.some(e => e.id === v.empresa)).length, "veículos vinculados às empresas", "gray")}</div>
+  <div class="grid g2">${DB.empresas.map(e => { const vs = DB.veiculos.filter(v => v.empresa === e.id); return `<div class="card company">
+    <div class="card-head"><div><div class="section-label">${esc(e.cnpj)}</div><h3>${esc(e.nome)}</h3><div class="sub">${esc(e.cidade)}</div></div><div class="actions"><button class="link" data-form="empresas:${e.id}">Editar</button><button class="link danger" data-del="empresas:${e.id}">Excluir</button></div></div>
+    <div class="chips" style="margin-bottom:10px">${e.servicos.map(s => `<span class="tag">${esc(s)}</span>`).join("")}</div>
+    <div class="ring-row"><div class="chart-box"><canvas id="ring-${e.id}" aria-label="Situação da frota da empresa"></canvas></div><div style="flex:1"><div class="stat-line"><span>Postos</span><b>${e.postos}</b></div><div class="stat-line"><span>Veículos vinculados</span><b>${vs.length}</b></div><div class="stat-line"><span>Em manutenção</span><b>${vs.filter(v => v.status === "Em manutenção").length}</b></div></div></div>
+    <button class="btn soft block" style="margin-top:12px" data-act="empdash:${e.id}">Ver dashboard operacional</button></div>`; }).join("")}</div>`;
+  return { html, after: () => DB.empresas.forEach(e => { const vs = DB.veiculos.filter(v => v.empresa === e.id);
+    chart("ring-" + e.id, { type: "doughnut", data: { labels: ["Ativos", "Disponíveis", "Em manutenção", "Inativos"], datasets: [{ data: ["Ativo", "Disponível", "Em manutenção", "Inativo"].map(s => vs.filter(v => v.status === s).length), backgroundColor: [css("--primary"), css("--accent"), "#15a34a", css("--purple")], borderWidth: 2, borderColor: css("--surface") }] }, options: { cutout: "64%", plugins: { legend: { display: false } } } }); }) };
+};
+function empresaDash(id) {
+  const e = emp(id), vs = DB.veiculos.filter(v => v.empresa === id), ms = DB.motoristas.filter(m => m.empresa === id);
+  const ab = DB.abastecimentos.filter(a => vs.some(v => v.id === a.veiculo)), mn = DB.manutencoes.filter(m => vs.some(v => v.id === m.veiculo));
+  openModal({ sub: "Dashboard operacional", title: esc(e.nome), wide: true, body: `
+    <div class="grid g4" style="margin-bottom:14px">${kpi("CNPJ", `<span style="font-size:16px">${esc(e.cnpj)}</span>`, "")}${kpi("Localização", `<span style="font-size:18px">${esc(e.cidade)}</span>`, "")}${kpi("Postos", e.postos, "")}${kpi("Motoristas", ms.length, "vinculados")}</div>
+    <div class="grid g2"><div class="card"><h3>Situação da frota vinculada</h3>${["Ativo", "Disponível", "Em manutenção", "Inativo"].map(s => `<div class="stat-line"><span>${s}</span><b>${vs.filter(v => v.status === s).length}</b></div>`).join("")}
+      <div class="stat-line"><span>Abastecimentos</span><b>${BRL(ab.reduce((s, a) => s + a.valor, 0))}</b></div><div class="stat-line"><span>Manutenções</span><b>${BRL(mn.reduce((s, m) => s + manCost(m), 0))}</b></div></div>
+    <div class="card"><h3>Veículos da empresa</h3>${vs.map(v => `<div class="stat-line"><span><b>${v.placa}</b> · ${esc(v.modelo)}</span>${statusTag(v.status)}</div>`).join("") || `<div class="empty">Nenhum veículo vinculado.</div>`}</div></div>`,
+    foot: `<span></span><button class="btn" data-close>Fechar</button>` });
+}
+
+PAGES.veiculos = () => {
+  const f = F.veiculos, q = f.q.toLowerCase();
+  const list = DB.veiculos.filter(v => (!q || (v.placa + v.modelo).toLowerCase().includes(q)) && (!f.empresa || v.empresa === f.empresa) && (!f.status || v.status === f.status));
+  const html = head("Cadastro da frota", "Veículos", `${list.length} veículo(s) encontrados conforme os filtros.`, `<button class="btn" data-form="veiculos">Novo veículo</button>`) + exportBar("veiculos", "Exportar veículos") + `
+  <div class="card" style="margin-bottom:14px"><div class="filters">
+    <div class="field"><label for="vq">Buscar</label><input class="input" id="vq" placeholder="Placa ou modelo" value="${esc(f.q)}"></div>
+    <div class="field"><label for="ve">Empresa</label><select class="input" id="ve">${opts(empOpts(), f.empresa, "Todas as empresas")}</select></div>
+    <div class="field"><label for="vs">Status</label><select class="input" id="vs">${opts(["Ativo", "Disponível", "Em manutenção", "Inativo"].map(s => [s, s]), f.status, "Todos os status")}</select></div>
+    <button class="btn" data-act="veic-filtrar">Filtrar</button></div></div>
+  <div class="table-wrap"><table><thead><tr><th>Placa</th><th>Modelo</th><th>Empresa</th><th>Centro de custo</th><th>Tipo</th><th>Combustível</th><th class="num">Hodômetro</th><th>Status</th><th>Ações</th></tr></thead><tbody>
+  ${list.map(v => `<tr><td><b>${v.placa}</b></td><td>${esc(v.modelo)}<small>${v.ano}</small></td><td>${esc(emp(v.empresa).nome)}</td><td>${esc(cLabel(v.centro))}</td><td>${v.tipo}</td><td>${v.combustivel}</td><td class="num">${NUM(v.km)} km</td><td>${statusTag(v.status)}</td>
+    <td><div class="actions"><button class="link" data-act="ficha:${v.id}">Ver ficha</button><button class="link" data-form="veiculos:${v.id}">Editar</button><button class="link danger" data-del="veiculos:${v.id}">Excluir</button></div></td></tr>`).join("") || `<tr><td colspan="9"><div class="empty">Nenhum veículo encontrado com esses filtros.</div></td></tr>`}
+  </tbody></table></div>`;
+  return { html };
+};
+function fichaVeiculo(id) {
+  const v = veic(id), ab = DB.abastecimentos.filter(a => a.veiculo === id), mn = DB.manutencoes.filter(m => m.veiculo === id), ck = DB.checklists.filter(c => c.veiculo === id);
+  openModal({ sub: "Ficha do veículo", title: `${v.placa} - ${esc(v.modelo)}`, wide: true, body: `
+    <div class="grid g4" style="margin-bottom:14px">${kpi("Status", statusTag(v.status), esc(emp(v.empresa).nome))}${kpi("Hodômetro", NUM(v.km), "km")}${kpi("Abastecimentos", BRL(ab.reduce((s, a) => s + a.valor, 0)), `${ab.length} lançamento(s)`)}${kpi("Manutenções", BRL(mn.reduce((s, m) => s + manCost(m), 0)), `${mn.length} ordem(ns)`)}</div>
+    <div class="grid g2"><div class="card"><h3>Últimos abastecimentos</h3>${ab.slice(0, 5).map(a => `<div class="stat-line"><span>${fmtDate(a.data)} · ${esc(a.posto)}</span><b>${BRL(a.valor)}</b></div>`).join("") || `<div class="empty">Sem abastecimentos.</div>`}</div>
+    <div class="card"><h3>Manutenções e checklists</h3>${mn.map(m => `<div class="stat-line"><span>${esc(m.titulo)}</span><span class="tag">${MAN_STATUS[m.status]}</span></div>`).join("")}${ck.map(c => `<div class="stat-line"><span>Checklist ${fmtDateTime(c.data)}</span><b>${ckStats(c).conf}%</b></div>`).join("") || ""}${!mn.length && !ck.length ? `<div class="empty">Sem registros.</div>` : ""}</div></div>`,
+    foot: `<span></span><button class="btn" data-close>Fechar</button>` });
+}
+
+PAGES.motoristas = () => {
+  const f = F.motoristas, q = f.q.toLowerCase();
+  const list = DB.motoristas.filter(m => (!q || m.nome.toLowerCase().includes(q)) && (!f.empresa || m.empresa === f.empresa));
+  const html = head("Cadastro de condutores", "Motoristas", `${list.length} motorista(s) cadastrados.`, `<button class="btn" data-form="motoristas">Novo motorista</button>`) + exportBar("motoristas", "Exportar motoristas") + `
+  <div class="card" style="margin-bottom:14px"><div class="filters"><div class="field"><label for="mq">Buscar</label><input class="input" id="mq" placeholder="Nome do motorista" value="${esc(f.q)}"></div>
+    <div class="field"><label for="me">Empresa</label><select class="input" id="me">${opts(empOpts(), f.empresa, "Todas as empresas")}</select></div><button class="btn" data-act="mot-filtrar">Filtrar</button></div></div>
+  <div class="table-wrap"><table><thead><tr><th>Motorista</th><th>CNH</th><th>Validade</th><th>Empresa</th><th>Veículo vinculado</th><th>Status</th><th>Ações</th></tr></thead><tbody>
+  ${list.map(m => { const c = cnhFaixa(m); return `<tr><td><b>${esc(m.nome)}</b><small>Matrícula ${esc(m.matricula)}</small></td><td>${m.cnh}<small>Categoria ${m.categoria}</small></td>
+    <td>${fmtDate(m.validade)}<small><span class="tag ${c.faixa === "prazo" ? "ok" : c.faixa === "media" ? "warn" : "danger"}">${c.d < 0 ? "Vencida" : `Vence em ${c.d} dias`}</span></small></td><td>${esc(emp(m.empresa).nome)}</td><td>${m.veiculo ? esc(vLabel(m.veiculo)) : "Sem veículo"}</td><td>${statusTag(m.status)}</td>
+    <td><div class="actions"><button class="link" data-form="motoristas:${m.id}">Editar</button><button class="link danger" data-del="motoristas:${m.id}">Excluir</button></div></td></tr>`; }).join("") || `<tr><td colspan="7"><div class="empty">Nenhum motorista encontrado.</div></td></tr>`}
+  </tbody></table></div>`;
+  return { html };
+};
+
+let selAbast = new Set();
+PAGES.abastecimentos = () => {
+  const f = F.abast, q = f.q.toLowerCase();
+  const list = DB.abastecimentos.filter(a => (!q || a.posto.toLowerCase().includes(q) || veic(a.veiculo).placa.toLowerCase().includes(q)) && (!f.veiculo || a.veiculo === f.veiculo) && inRange(a.data, f.ini, f.fim));
+  const html = head("Operação da frota", "Abastecimentos", `${list.length} lançamento(s) encontrados · ${BRL(list.reduce((s, a) => s + a.valor, 0))} · ${NUM(list.reduce((s, a) => s + a.litros, 0), 1)} litros`, `<button class="btn" data-form="abastecimentos">Novo abastecimento</button>`) + `
+  <div class="card" style="margin-bottom:14px"><div class="filters"><div class="field"><label for="aq">Buscar</label><input class="input" id="aq" placeholder="Posto ou placa" value="${esc(f.q)}"></div>
+    <div class="field"><label for="av">Veículo</label><select class="input" id="av">${opts(vehOpts(), f.veiculo, "Todos os veículos")}</select></div>
+    <div class="field"><label for="ai">Data inicial</label><input class="input" type="date" id="ai" value="${f.ini}"></div><div class="field"><label for="af">Data final</label><input class="input" type="date" id="af" value="${f.fim}"></div>
+    <button class="btn" data-act="abast-filtrar">Filtrar</button></div></div>
+  ${exportBar("abastecimentos", "Exportar abastecimentos", "Exporta todos os lançamentos filtrados.")}
+  <div class="card" style="padding:12px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px"><div><b style="font-size:13px">Exportar selecionados</b><div class="sub" style="font-size:12px">${selAbast.size} lançamento(s) marcados na tabela.</div></div>${exportChips("abastSel")}</div>
+  <div class="table-wrap"><table><thead><tr><th><input type="checkbox" aria-label="Selecionar todos" data-act="abast-all"></th><th>Data</th><th>Veículo</th><th>Posto</th><th class="num">Litros</th><th class="num">Valor</th><th>Centro de custo</th><th>Comprovantes</th><th>Ações</th></tr></thead><tbody>
+  ${list.map(a => `<tr><td><input type="checkbox" aria-label="Selecionar" data-sel="${a.id}" ${selAbast.has(a.id) ? "checked" : ""}></td><td>${fmtDate(a.data)}</td><td><b>${esc(vLabel(a.veiculo))}</b><small>${esc(mot(a.motorista).nome)}</small></td><td>${esc(a.posto)}<small>${a.combustivel}</small></td>
+    <td class="num">${NUM(a.litros, 3)} L</td><td class="num">${BRL(a.valor)}</td><td>${esc(cLabel(a.centro))}</td><td>${a.comprovantes ? `<span class="tag mint">${a.comprovantes} anexo(s)</span>` : `<span class="muted">Sem anexo</span>`}</td>
+    <td><div class="actions"><button class="link" data-form="abastecimentos:${a.id}">Editar</button><button class="link danger" data-del="abastecimentos:${a.id}">Excluir</button></div></td></tr>`).join("") || `<tr><td colspan="9"><div class="empty">Nenhum abastecimento no período. Use “Novo abastecimento” para lançar.</div></td></tr>`}
+  </tbody></table></div>`;
+  return { html };
+};
+
+PAGES.manutencoes = () => {
+  const f = F.man;
+  const list = DB.manutencoes.filter(m => { const v = veic(m.veiculo); return (!f.veiculo || m.veiculo === f.veiculo) && (!f.centro || m.centro === f.centro) && (!f.empresa || v.empresa === f.empresa) && inRange(m.programada, f.ini, f.fim); });
+  const col = (k, color) => { const items = list.filter(m => m.status === k); return `<div class="col" data-col="${k}"><div class="col-head"><b><span class="dot" style="background:${color}"></span>${MAN_STATUS[k]}</b><span class="pill">${items.length}</span></div>
+    ${items.map(m => `<article class="kcard" draggable="true" data-card="${m.id}"><div class="top" style="display:flex;justify-content:space-between;gap:6px"><span class="tag ${k === "conformidade" ? "ok" : k === "andamento" ? "warn" : "purple"}">${MAN_STATUS[k]}</span>${prioTag(m.prioridade)}</div>
+      <h4>${esc(m.titulo)}</h4><div class="sub">${esc(vLabel(m.veiculo))}</div>
+      <dl><dt>Tipo</dt><dd>${m.tipo}</dd><dt>Programada</dt><dd>${fmtDate(m.programada)}</dd><dt>Custo</dt><dd>${BRL(manCost(m))}</dd><dt>Fornecedor</dt><dd>${esc(m.fornecedor || "—")}</dd><dt>Responsável</dt><dd>${esc(m.responsavel)}</dd></dl>
+      <div class="field"><label for="mv-${m.id}">Mover para</label><select class="input" id="mv-${m.id}" data-move="${m.id}">${opts(Object.entries(MAN_STATUS), k)}</select></div>
+      <div class="actions" style="margin-top:10px"><button class="link" data-form="manutencoes:${m.id}">Editar</button><button class="link danger" data-del="manutencoes:${m.id}">Excluir</button></div></article>`).join("") || `<div class="empty">Nenhuma manutenção nesta etapa.</div>`}</div>`; };
+  const html = head("Operação da frota", "Manutenções", "Arraste o card entre as etapas para atualizar a situação da manutenção.", `<button class="btn" data-form="manutencoes">Nova manutenção</button>`) + `
+  <div class="grid g4" style="margin-bottom:14px">${kpi("Colocar para manutenção", list.filter(m => m.status === "colocar").length, "aguardando encaminhamento", "purple")}${kpi("Em manutenção", list.filter(m => m.status === "andamento").length, "serviços em execução", "gray")}${kpi("Em conformidade", list.filter(m => m.status === "conformidade").length, "serviços regularizados", "green")}${kpi("Custo registrado", BRL(list.reduce((s, m) => s + manCost(m), 0)), "ordens listadas")}</div>
+  <div class="card" style="margin-bottom:14px"><div class="filters">
+    <div class="field"><label for="mi">Data inicial</label><input class="input" type="date" id="mi" value="${f.ini}"></div><div class="field"><label for="mf">Data final</label><input class="input" type="date" id="mf" value="${f.fim}"></div>
+    <div class="field"><label for="mv">Veículo</label><select class="input" id="mv">${opts(vehOpts(), f.veiculo, "Todos os veículos")}</select></div>
+    <div class="field"><label for="mc">Centro de custo</label><select class="input" id="mc">${opts(cenOpts(), f.centro, "Todos os centros")}</select></div>
+    <div class="field"><label for="mE">Empresa</label><select class="input" id="mE">${opts(empOpts(), f.empresa, "Todas as empresas")}</select></div>
+    <button class="btn" data-act="man-filtrar">Filtrar</button></div></div>
+  ${exportBar("manutencoes", "Exportar manutenções", "O relatório respeita os filtros aplicados acima.")}
+  <div class="kanban">${col("colocar", "#7c3aed")}${col("andamento", "#e8870e")}${col("conformidade", "#15a34a")}</div>`;
+  return { html, after: root => {
+    root.querySelectorAll("[data-card]").forEach(c => c.addEventListener("dragstart", e => { e.dataTransfer.setData("text/plain", c.dataset.card); }));
+    root.querySelectorAll("[data-col]").forEach(col => {
+      col.addEventListener("dragover", e => { e.preventDefault(); col.classList.add("drag"); });
+      col.addEventListener("dragleave", () => col.classList.remove("drag"));
+      col.addEventListener("drop", e => { e.preventDefault(); col.classList.remove("drag"); moveMan(e.dataTransfer.getData("text/plain"), col.dataset.col); });
+    });
+  } };
+};
+function moveMan(id, status) {
+  const m = byId("manutencoes", id); if (!m || m.status === status) return;
+  m.status = status; const v = veic(m.veiculo);
+  if (status === "andamento") { m.inicio = m.inicio || T0; if (v.id) v.status = "Em manutenção"; }
+  if (status === "conformidade") { m.conclusao = T0; if (v.id && !DB.manutencoes.some(x => x.veiculo === v.id && x.status === "andamento")) v.status = "Ativo"; }
+  if (status === "colocar") { m.conclusao = ""; }
+  audit("Manutenções", "MA", `atualizou a manutenção “${m.titulo}”`, `${v.placa} · ${MAN_STATUS[status]} · ${m.fornecedor || "sem fornecedor"}`); save();
+  rerender(); toast(`Manutenção movida para ${MAN_STATUS[status]}.`);
+}
+
+/* ================= CHECKLIST ================= */
+PAGES.checklist = sub => {
+  if (sub === "novo") return checklistForm();
+  const f = F.ck;
+  const list = DB.checklists.filter(c => (!f.veiculo || c.veiculo === f.veiculo) && inRange(c.data, f.ini, f.fim)).sort((a, b) => b.data.localeCompare(a.data));
+  const st = list.map(ckStats), okN = st.filter(s => s.ok).length, media = list.length ? Math.round(st.reduce((s, x) => s + x.conf, 0) / list.length) : 0;
+  const html = head("Auditoria da frota", "Checklist do veículo", "Acompanhe as inspeções registradas no sistema e identifique pendências antes da operação.", `<a class="btn" href="#/checklist/novo">Novo checklist</a>`) + `
+  <div class="grid g4" style="margin-bottom:14px">${kpi("Checklists", list.length, "no período filtrado")}${kpi("Em conformidade", okN, "sem pendências", "green")}${kpi("Requerem atenção", list.length - okN, "com item não conforme", "gray")}${kpi("Conformidade média", media + "%", "itens avaliados", "purple")}</div>
+  <div class="card" style="margin-bottom:14px"><b>Filtrar inspeções</b><div class="sub" style="margin-bottom:10px">Consulte os checklists pela data preenchida e pelo veículo inspecionado.</div><div class="filters">
+    <div class="field"><label for="kv">Veículo</label><select class="input" id="kv">${opts(vehOpts(), f.veiculo, "Todos os veículos")}</select></div>
+    <div class="field"><label for="ki">Data inicial</label><input class="input" type="date" id="ki" value="${f.ini}"></div><div class="field"><label for="kf">Data final</label><input class="input" type="date" id="kf" value="${f.fim}"></div>
+    <button class="btn" data-act="ck-filtrar">Filtrar</button></div></div>
+  <div class="grid g3" style="margin-bottom:14px">
+    <div class="card"><h3>Situação das inspeções</h3><div class="sub">Distribuição entre conformes e checklists com pendências.</div><div class="chart-box short" style="margin-top:8px"><canvas id="k1" aria-label="Situação das inspeções"></canvas></div></div>
+    <div class="card"><h3>Evolução por data</h3><div class="sub">Quantidade de inspeções recebidas em cada dia.</div><div class="chart-box short" style="margin-top:8px"><canvas id="k2" aria-label="Evolução por data"></canvas></div></div>
+    <div class="card"><h3>Pendências recorrentes</h3><div class="sub">Itens que mais aparecem como não conformes.</div><div class="chart-box short" style="margin-top:8px"><canvas id="k3" aria-label="Pendências recorrentes"></canvas></div></div></div>
+  <div class="card-head"><div><div class="section-label">Respostas recebidas</div><h3>Inspeções preenchidas</h3></div><span class="muted">${list.length} registro(s)</span></div>
+  <div class="grid g3">${list.map((c, i) => { const s = st[i], d = mot(c.motorista); return `<div class="card icard"><div class="top"><span class="tag ${s.ok ? "ok" : "warn"}">${s.ok ? "Em conformidade" : "Requer atenção"}</span><span class="muted" style="font-size:12px">${fmtDateTime(c.data)}</span></div>
+    <h4>${esc(vLabel(c.veiculo))}</h4><div class="sub">${esc(d.nome)} / ${esc(c.matricula)}</div>
+    <div class="meta"><div><b>${s.conf}%</b>conformidade</div><div><b>${s.bad.length + (c.temAvaria ? c.avarias.length : 0)}</b>pendências</div><div><b>${NUM(c.km)} km</b>hodômetro</div></div>
+    <div class="progress"><i class="${s.ok ? "" : "warn"}" style="width:${s.conf}%"></i></div>
+    <div class="foot"><button class="link" data-act="ckopen:${c.id}">Abrir checklist</button><button class="link danger" data-del="checklists:${c.id}">Excluir</button></div></div>`; }).join("") || `<div class="empty" style="grid-column:1/-1">Nenhuma inspeção encontrada. Crie um checklist para começar.</div>`}</div>`;
+  return { html, after: () => {
+    chart("k1", { type: "doughnut", data: { labels: ["Em conformidade", "Requer atenção"], datasets: [{ data: [okN, list.length - okN], backgroundColor: ["#15a34a", "#e8870e"], borderWidth: 2, borderColor: css("--surface") }] }, options: { cutout: "60%" } });
+    const days = []; for (let i = 13; i >= 0; i--) days.push(addDays(T0, -i));
+    const dayOf = c => { const d = new Date(c.data); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
+    chart("k2", { type: "bar", data: { labels: days.map(d => fmtDate(d).slice(0, 5)), datasets: [{ label: "Em conformidade", data: days.map(d => list.filter((c, i) => dayOf(c) === d && st[i].ok).length), backgroundColor: "#15a34a", borderRadius: 3 }, { label: "Requer atenção", data: days.map(d => list.filter((c, i) => dayOf(c) === d && !st[i].ok).length), backgroundColor: "#e8870e", borderRadius: 3 }] }, options: { scales: { x: { stacked: true, ticks: { font: { size: 9 } } }, y: { stacked: true, ticks: { precision: 0 } } } } });
+    const cnt = {}; st.forEach(s => s.bad.forEach(b => cnt[b.q] = (cnt[b.q] || 0) + 1));
+    const top = Object.entries(cnt).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    chart("k3", { type: "bar", data: { labels: top.map(t => t[0]), datasets: [{ data: top.map(t => t[1]), backgroundColor: css("--primary"), borderRadius: 4 }] }, options: { indexAxis: "y", plugins: { legend: { display: false } }, scales: { x: { ticks: { precision: 0 } }, y: { ticks: { font: { size: 10 } } } } } });
+  } };
+};
+
+function mapHTML(tipo, vista, marks, allMarks, clickable, key = "") {
+  const numOf = m => allMarks.indexOf(m) + 1;
+  return `<div class="map-wrap${tipo === "carro" ? " light" : ""}" ${clickable ? `data-map="${key}" tabindex="0" aria-label="Clique no desenho para marcar a avaria"` : ""}>${vehicleSVG(tipo, vista)}
+    ${marks.map(m => `<span class="marker" style="left:${m.x}%;top:${m.y}%">${numOf(m)}</span>`).join("")}</div>`;
+}
+function openChecklist(id) {
+  const c = byId("checklists", id); if (!c) return;
+  const s = ckStats(c), v = veic(c.veiculo);
+  openModal({ sub: fmtDateTime(c.data), title: esc(vLabel(c.veiculo)), wide: true, body: `
+    <div class="grid g4" style="margin-bottom:14px">${kpi("Condutor", `<span style="font-size:16px">${esc(mot(c.motorista).nome)}</span>`, `Matrícula ${esc(c.matricula)}`)}${kpi("Situação", `<span style="font-size:18px">${s.ok ? "Em conformidade" : "Requer atenção"}</span>`, "")}${kpi("Conformidade", s.conf + "%", "")}${kpi("Quilometragem", NUM(c.km) + " km", "")}</div>
+    ${s.bad.length ? `<div class="card" style="background:var(--warn-soft);border-color:transparent;margin-bottom:14px"><b>Pendências identificadas</b><ul style="margin:8px 0 0">${s.bad.map(b => `<li>${esc(b.q)}${c.desc[b.id] ? ` — <span class="muted">${esc(c.desc[b.id])}</span>` : ""}</li>`).join("")}</ul></div>` : ""}
+    <div class="table-wrap" style="margin-bottom:14px"><table><thead><tr><th>Item</th><th>Resposta</th><th>Evidência</th></tr></thead><tbody>${CHECK_ITEMS.map(it => { const bad = isBad(it, c.respostas[it.id]); return `<tr><td>${esc(it.q)}</td><td><span class="tag ${bad ? "danger" : "ok"}">${esc(c.respostas[it.id] || "—")}</span></td><td>${c.evid[it.id] ? `<img src="${c.evid[it.id]}" alt="Evidência de ${esc(it.q)}" style="height:48px;border-radius:6px">` : `<span class="muted">—</span>`}</td></tr>`; }).join("")}</tbody></table></div>
+    <div class="card-head"><div><h3>Avarias registradas</h3><div class="sub">${c.temAvaria ? c.avarias.length : 0} ocorrência(s) neste checklist.</div></div><button class="btn ghost" data-act="ckpdf:${c.id}">Exportar checklist em PDF</button></div>
+    ${c.temAvaria ? c.avarias.map((a, i) => { const vistas = [...new Set(a.marcas.map(m => m.tipo + "|" + m.vista))]; return `<div class="avaria" style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;gap:8px"><div><b>Avaria ${i + 1}</b><div class="sub">${esc(a.local)}</div></div>${prioTag(a.gravidade)}</div><p style="margin:8px 0">${esc(a.descricao)}</p>
+      <div class="grid g2">${vistas.map(k => { const [t, vi] = k.split("|"); return `<div><div class="sub" style="margin-bottom:6px"><b>${t === "moto" ? "Moto" : "Carro"} · ${VISTAS.find(x => x[0] === vi)[1]}</b></div>${mapHTML(t, vi, a.marcas.filter(m => m.tipo === t && m.vista === vi), a.marcas, false)}</div>`; }).join("")}</div></div>`; }).join("") : `<div class="empty">Nenhuma avaria registrada.</div>`}
+    ${c.obs ? `<div class="card" style="margin-top:14px"><b>Observação geral</b><p style="margin:6px 0 0">${esc(c.obs)}</p></div>` : ""}`,
+    foot: `<button class="btn ghost" data-act="ckpdf:${c.id}">Exportar PDF</button><button class="btn" data-close>Fechar</button>` });
+}
+
+/* ---- Formulário de novo checklist ---- */
+let DRAFT = null, DRAFT_ERR = {};
+const newDraft = () => ({ data: new Date().toISOString(), motorista: "", matricula: "", veiculo: "", km: "", respostas: {}, evid: {}, desc: {}, obs: "", temAvaria: null, avarias: [] });
+const newAvaria = () => ({ local: "", gravidade: "", descricao: "", marcas: [], ui: { tipo: DRAFT && DRAFT.veiculo && veic(DRAFT.veiculo).tipo === "Moto" ? "moto" : "carro", vista: "lado_esquerdo" } });
+function checklistForm() {
+  if (!DRAFT) DRAFT = newDraft();
+  const d = DRAFT, E = DRAFT_ERR;
+  const seg = (name, optsArr, cur, badIdx = 1) => `<div class="seg">${optsArr.map((o, i) => `<button type="button" class="${cur === o ? "on" + (i === badIdx ? " bad" : "") : ""}" data-ans="${name}|${esc(o)}">${esc(o)}</button>`).join("")}</div>`;
+  const html = head("Auditoria de veículos", "Auditoria de veículos", "Responda cada item. Evidência e descrição passam a ser obrigatórias quando a resposta indica problema.", `<a class="btn ghost" href="#/checklist">Voltar</a>`) + `
+  <div class="stack">
+  <div class="card"><div class="section-label">Identificação</div><h3>Dados da inspeção, do condutor e do veículo</h3>
+    <div class="form-grid" style="margin-top:12px">
+      <div class="field"><label>Data e hora</label><input class="input" value="${fmtDateTime(d.data)}" disabled></div>
+      <div class="field"><label for="dm">Condutor <span class="req">*</span></label><select class="input" id="dm" data-draft="motorista">${opts(DB.motoristas.filter(m => m.status === "Ativo").map(m => [m.id, m.nome]), d.motorista, "Selecione o condutor")}</select>${E.motorista ? `<span class="err">Escolha o condutor.</span>` : ""}</div>
+      <div class="field"><label for="dv">Veículo <span class="req">*</span></label><select class="input" id="dv" data-draft="veiculo">${opts(vehOpts(), d.veiculo, "Selecione o veículo")}</select>${E.veiculo ? `<span class="err">Escolha o veículo.</span>` : ""}</div>
+      <div class="field"><label for="dk">Quilometragem atual <span class="req">*</span></label><input class="input" id="dk" type="number" inputmode="numeric" data-draft="km" value="${esc(d.km)}" placeholder="Ex.: 12000">${E.km ? `<span class="err">Informe a quilometragem.</span>` : ""}</div>
+    </div></div>
+  <div class="card"><div class="section-label">Itens do checklist</div><h3>Selecione a resposta de cada item</h3><div class="sub">Em caso negativo, anexe uma foto e descreva o problema.</div>
+    <div class="grid g2" style="margin-top:12px">${CHECK_ITEMS.map(it => { const a = d.respostas[it.id], bad = isBad(it, a); return `<div class="q ${bad ? "bad" : ""}" id="q-${it.id}"><h4>${esc(it.q)} <span style="color:var(--danger)">*</span></h4>${seg(it.id, it.opts, a)}
+      ${E["r_" + it.id] ? `<span class="err">Responda este item.</span>` : ""}
+      <div class="evid"><label class="drop ${bad && !d.evid[it.id] ? "need" : ""}">${d.evid[it.id] ? `<img src="${d.evid[it.id]}" alt="Evidência anexada">Trocar foto` : `<b>Adicionar evidência${bad ? " *" : ""}</b>${bad ? "Foto obrigatória para resposta negativa" : "Opcional para resposta positiva"}`}<input type="file" accept="image/*" data-photo="${it.id}" aria-label="Foto de evidência de ${esc(it.q)}"></label>
+      ${bad ? `<div class="field"><label for="ds-${it.id}">Descrição do problema <span class="req">*</span></label><textarea class="input" id="ds-${it.id}" data-desc="${it.id}" placeholder="Descreva o problema encontrado e a providência necessária.">${esc(d.desc[it.id] || "")}</textarea></div>` : `<div></div>`}</div>
+      ${E["e_" + it.id] ? `<span class="err">${esc(E["e_" + it.id])}</span>` : ""}</div>`; }).join("")}</div></div>
+  <div class="card"><div class="section-label">Observação geral</div><h3>Registre recomendações ou outras informações importantes</h3><textarea class="input" style="margin-top:10px" data-draft="obs" placeholder="Opcional">${esc(d.obs)}</textarea></div>
+  <div class="card"><div class="section-label">Avarias ou pendências</div><h3>Foi identificada alguma avaria ou pendência? <span style="color:var(--danger)">*</span></h3>
+    <div style="max-width:360px;margin-top:10px">${seg("__avaria", ["Não", "Sim"], d.temAvaria === null ? null : d.temAvaria ? "Sim" : "Não", 1)}</div>${E.temAvaria ? `<span class="err">Informe se há avaria.</span>` : ""}
+    ${d.temAvaria ? `<div class="stack" style="margin-top:14px">${d.avarias.map((a, i) => avariaBlock(a, i)).join("")}
+      <div><button class="btn ghost" data-act="av-add">Criar nova avaria</button> <span class="muted" style="font-size:12px">É possível registrar mais de uma avaria no mesmo checklist.</span></div></div>` : ""}</div>
+  <div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><div><b>Pronto para finalizar?</b><div class="sub">Confira as respostas obrigatórias antes de enviar.</div></div><button class="btn" data-act="ck-finalizar">Finalizar checklist</button></div>
+  </div>`;
+  return { html };
+}
+function avariaBlock(a, i) {
+  const E = DRAFT_ERR["av" + i] || {};
+  const marksHere = a.marcas.filter(m => m.tipo === a.ui.tipo && m.vista === a.ui.vista);
+  return `<div class="avaria"><div style="display:flex;justify-content:space-between;align-items:center"><div><div class="section-label">Ocorrência</div><b>Avaria ${i + 1}</b></div>${DRAFT.avarias.length > 1 ? `<button class="link danger" data-act="av-del:${i}">Remover avaria</button>` : ""}</div>
+    <div class="form-grid" style="margin-top:10px"><div class="field"><label for="al-${i}">Local da avaria <span class="req">*</span></label><input class="input" id="al-${i}" data-av="${i}|local" value="${esc(a.local)}" placeholder="Ex.: para-choque frontal">${E.local ? `<span class="err">Informe o local.</span>` : ""}</div>
+    <div class="field"><label for="ag-${i}">Gravidade <span class="req">*</span></label><select class="input" id="ag-${i}" data-av="${i}|gravidade">${opts([["Baixa", "Baixa"], ["Média", "Média"], ["Alta", "Alta"]], a.gravidade, "Selecione")}</select>${E.gravidade ? `<span class="err">Escolha a gravidade.</span>` : ""}</div>
+    <div class="field full"><label for="ad-${i}">Descrição da pendência encontrada <span class="req">*</span></label><textarea class="input" id="ad-${i}" data-av="${i}|descricao" placeholder="Descreva o que foi encontrado e qual pendência deve ser tratada.">${esc(a.descricao)}</textarea>${E.descricao ? `<span class="err">Descreva a avaria.</span>` : ""}</div></div>
+    <div class="card" style="margin-top:12px;box-shadow:none"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><div><b>Localização digital da avaria</b><div class="sub">Escolha o tipo de veículo e clique sobre a imagem para marcar o ponto.</div></div><span class="tag mint">${a.marcas.length} marcação(ões)</span></div>
+      <div class="seg" style="margin-top:10px">${["carro", "moto"].map(t => `<button type="button" class="${a.ui.tipo === t ? "on" : ""}" data-avtipo="${i}|${t}">${t === "carro" ? "Carro" : "Moto"}</button>`).join("")}</div>
+      <div class="tabs">${VISTAS.map(([k, l]) => `<button type="button" class="${a.ui.vista === k ? "on" : ""}" data-avvista="${i}|${k}">${l}</button>`).join("")}</div>
+      ${mapHTML(a.ui.tipo, a.ui.vista, marksHere, a.marcas, true, String(i))}
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap"><span class="muted" style="font-size:12px">${marksHere.length ? `Ponto registrado na vista ${VISTAS.find(v => v[0] === a.ui.vista)[1].toLowerCase()}.` : "Clique na imagem para adicionar marcações. Clique no ponto para removê-lo."}</span>
+      <span class="actions"><button class="btn ghost sm" data-act="av-clearview:${i}">Limpar vista atual</button><button class="link danger" data-act="av-clear:${i}">Limpar marcações</button></span></div>
+      ${E.marcas ? `<span class="err">Marque ao menos um ponto no desenho.</span>` : ""}</div></div>`;
+}
+function finalizarChecklist() {
+  const d = DRAFT, E = {}; DRAFT_ERR = E;
+  if (!d.motorista) E.motorista = 1; if (!d.veiculo) E.veiculo = 1; if (!d.km) E.km = 1;
+  CHECK_ITEMS.forEach(it => { const a = d.respostas[it.id]; if (!a) E["r_" + it.id] = 1; else if (isBad(it, a)) { const miss = [!d.evid[it.id] && "anexe a foto", !(d.desc[it.id] || "").trim() && "descreva o problema"].filter(Boolean); if (miss.length) E["e_" + it.id] = "Para resposta negativa, " + miss.join(" e ") + "."; } });
+  if (d.temAvaria === null) E.temAvaria = 1;
+  if (d.temAvaria) d.avarias.forEach((a, i) => { const e = {}; if (!a.local.trim()) e.local = 1; if (!a.gravidade) e.gravidade = 1; if (!a.descricao.trim()) e.descricao = 1; if (!a.marcas.length) e.marcas = 1; if (Object.keys(e).length) E["av" + i] = e; });
+  if (Object.keys(E).length) { rerender(); toast("Existem campos obrigatórios pendentes. Confira os itens destacados.", "err"); const first = document.querySelector(".err"); if (first) first.scrollIntoView({ block: "center", behavior: "smooth" }); return; }
+  const rec = { id: uid("ck"), data: d.data, veiculo: d.veiculo, motorista: d.motorista, matricula: mot(d.motorista).matricula, km: +d.km, respostas: d.respostas, evid: d.evid, desc: d.desc, obs: d.obs, temAvaria: d.temAvaria, avarias: d.temAvaria ? d.avarias.map(a => ({ local: a.local, gravidade: a.gravidade, descricao: a.descricao, marcas: a.marcas })) : [] };
+  DB.checklists.unshift(rec); const v = veic(d.veiculo); if (v.id && +d.km > v.km) v.km = +d.km;
+  audit("Checklists", "CK", `criou o checklist do veículo ${v.placa}`, "Alteração registrada em Checklists."); save();
+  DRAFT = null; DRAFT_ERR = {}; location.hash = "#/checklist"; toast("Checklist finalizado e registrado."); setTimeout(() => openChecklist(rec.id), 250);
+}
+function readPhoto(file, cb) {
+  const fr = new FileReader(); fr.onload = () => { const img = new Image(); img.onload = () => { const s = Math.min(1, 480 / Math.max(img.width, img.height)); const cv = document.createElement("canvas"); cv.width = Math.round(img.width * s); cv.height = Math.round(img.height * s); cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height); cb(cv.toDataURL("image/jpeg", .72)); }; img.onerror = () => toast("Não foi possível ler essa imagem. Tente outra foto.", "err"); img.src = fr.result; }; fr.readAsDataURL(file);
+}
+
+/* ---- PDF do checklist ---- */
+function svgToPng(svg, w = 900, h = 510) {
+  return new Promise(res => { const img = new Image(); img.onload = () => { const cv = document.createElement("canvas"); cv.width = w; cv.height = h; cv.getContext("2d").drawImage(img, 0, 0, w, h); res(cv.toDataURL("image/png")); }; img.onerror = () => res(null); img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg); });
+}
+function svgWithMarks(tipo, vista, marks, all) {
+  const dots = marks.map(m => { const x = m.x * 6, y = m.y * 3.4, n = all.indexOf(m) + 1; return `<circle cx="${x}" cy="${y}" r="15" fill="#e03131" stroke="#fff" stroke-width="3"/><text x="${x}" y="${y + 5}" text-anchor="middle" font-family="Arial" font-weight="700" font-size="15" fill="#fff">${n}</text>`; }).join("");
+  return vehicleSVG(tipo, vista).replace("</svg>", dots + "</svg>");
+}
+async function checklistPDF(id) {
+  const c = byId("checklists", id); if (!c) return;
+  if (!window.jspdf) { toast("Gerador de PDF indisponível sem conexão.", "err"); return; }
+  const { jsPDF } = window.jspdf; const doc = new jsPDF({ unit: "pt", format: "a4" });
+  const s = ckStats(c), W = doc.internal.pageSize.getWidth(), red = [200, 16, 46];
+  doc.setFillColor(...red); doc.rect(0, 0, W, 8, "F");
+  doc.setFont("helvetica", "bold"); doc.setFontSize(20); doc.setTextColor(20); doc.text("RESUMO DO CHECKLIST DO VEÍCULO", 40, 48);
+  doc.setFont("helvetica", "normal"); doc.setFontSize(10); doc.setTextColor(110); doc.text(`Auditoria de veículos · ${CHECK_ITEMS.length} perguntas e respostas consolidadas · ${CFG.nome} (demonstração)`, 40, 64);
+  doc.setFillColor(30, 36, 42); doc.roundedRect(40, 76, W - 80, 30, 5, 5, "F"); doc.setTextColor(255); doc.setFontSize(10);
+  doc.text(`REGISTRO: ${fmtDateTime(c.data)}`, 52, 95); doc.text(`SITUAÇÃO: ${s.ok ? "EM CONFORMIDADE" : "REQUER ATENÇÃO"}`, 230, 95);
+  doc.setFillColor(...(s.ok ? [21, 163, 74] : red)); doc.roundedRect(W - 170, 81, 118, 20, 4, 4, "F"); doc.text(`CONFORMIDADE ${s.conf}%`, W - 160, 95);
+  doc.autoTable({ startY: 118, theme: "grid", styles: { fontSize: 9 }, headStyles: { fillColor: [235, 241, 246], textColor: 60 },
+    head: [["Data / hora informada", "Condutor / matrícula", "Veículo / placa / km"]], body: [[fmtDateTime(c.data), `${mot(c.motorista).nome} / ${c.matricula}`, `${veic(c.veiculo).modelo} / ${veic(c.veiculo).placa} / ${NUM(c.km)} km`]] });
+  doc.setFontSize(13); doc.setTextColor(20); doc.text("CONDIÇÃO DO VEÍCULO", 40, doc.lastAutoTable.finalY + 26);
+  doc.autoTable({ startY: doc.lastAutoTable.finalY + 34, theme: "striped", styles: { fontSize: 9 }, headStyles: { fillColor: [86, 225, 198], textColor: 20 },
+    head: [["Item", "Resposta", "Observação"]], body: CHECK_ITEMS.map(it => [it.q, c.respostas[it.id] || "—", c.desc[it.id] || ""]),
+    didParseCell: h => { if (h.section === "body" && h.column.index === 1) { const it = CHECK_ITEMS[h.row.index]; if (isBad(it, c.respostas[it.id])) { h.cell.styles.textColor = red; h.cell.styles.fontStyle = "bold"; } } } });
+  let y = doc.lastAutoTable.finalY + 20;
+  const ensure = hNeed => { if (y + hNeed > doc.internal.pageSize.getHeight() - 40) { doc.addPage(); doc.setFillColor(...red); doc.rect(0, 0, W, 8, "F"); y = 40; } };
+  if (c.obs) { ensure(40); doc.setFontSize(11); doc.setTextColor(20); doc.text("Observação geral", 40, y); doc.setFontSize(9); doc.setTextColor(90); doc.text(doc.splitTextToSize(c.obs, W - 80), 40, y + 14); y += 34; }
+  if (c.temAvaria) for (let i = 0; i < c.avarias.length; i++) {
+    const a = c.avarias[i]; ensure(60); doc.setFontSize(12); doc.setTextColor(20); doc.text(`AVARIA ${i + 1} — ${a.local} (${a.gravidade})`, 40, y); doc.setFontSize(9); doc.setTextColor(90); doc.text(doc.splitTextToSize(a.descricao, W - 80), 40, y + 14); y += 30;
+    const vistas = [...new Set(a.marcas.map(m => m.tipo + "|" + m.vista))];
+    for (const k of vistas) { const [t, vi] = k.split("|"); const png = await svgToPng(svgWithMarks(t, vi, a.marcas.filter(m => m.tipo === t && m.vista === vi), a.marcas)); if (!png) continue; ensure(190); doc.setFontSize(9); doc.setTextColor(20); doc.text(`${t === "moto" ? "Moto" : "Carro"} · ${VISTAS.find(x => x[0] === vi)[1]}`, 40, y + 4); doc.addImage(png, "PNG", 40, y + 10, 300, 170); y += 190; }
+  }
+  const fotos = Object.entries(c.evid);
+  if (fotos.length) { ensure(140); doc.setFontSize(12); doc.setTextColor(20); doc.text("EVIDÊNCIAS ANEXADAS", 40, y + 6); y += 16; let x = 40;
+    for (const [k, src] of fotos) { if (x + 120 > W - 40) { x = 40; y += 120; ensure(120); } try { doc.addImage(src, "JPEG", x, y, 110, 90); } catch (e) {} doc.setFontSize(7); doc.setTextColor(110); doc.text(doc.splitTextToSize(CHECK_ITEMS.find(i => i.id === k).q, 110), x, y + 100); x += 124; } y += 120; }
+  doc.setFontSize(8); doc.setTextColor(140); doc.text("Documento gerado em ambiente de demonstração com dados fictícios.", 40, doc.internal.pageSize.getHeight() - 24);
+  await saveFile(`checklist-${veic(c.veiculo).placa}-${c.data.slice(0, 10)}.pdf`, doc.output("blob"));
+}
+
+/* ================= PLANOS PREVENTIVOS ================= */
+PAGES.planos = () => {
+  const ms = DB.motoristas.filter(m => m.status === "Ativo").map(m => ({ m, ...cnhFaixa(m) })).sort((a, b) => a.d - b.d);
+  const col = (k, t, sub, color) => { const it = ms.filter(x => x.faixa === k); return `<div class="col"><div class="col-head"><b><span class="dot" style="background:${color}"></span>${t}</b><span class="pill">${it.length}</span></div><div class="sub" style="margin:-6px 4px 10px">${sub}</div>
+    ${it.map(x => `<div class="kcard" style="cursor:default"><div style="display:flex;justify-content:space-between"><span class="tag ${k === "prazo" ? "ok" : k === "media" ? "warn" : "danger"}">${t}</span><b>${fmtDate(x.m.validade)}</b></div><h4>${esc(x.m.nome)}</h4><div class="sub">CNH ${x.m.cnh} · Categoria ${x.m.categoria}</div><div class="sub">${x.d < 0 ? `Venceu há ${-x.d} dias.` : `Vence em ${x.d} dias.`}</div><button class="btn ghost sm block" style="margin-top:10px" data-form="motoristas:${x.m.id}">Ver motorista</button></div>`).join("") || `<div class="empty">Nenhuma CNH nesta faixa.</div>`}</div>`; };
+  const html = head("Manutenção planejada", "Planos preventivos", "Acompanhe prazos que vencem sozinhos antes que virem problema.", `<button class="btn" data-form="planos">Novo plano preventivo</button>`) + exportBar("planos", "Exportar planos preventivos") + `
+  <div class="card" style="margin-bottom:14px"><div class="section-label">Preventivo automático</div><h3>Renovação de CNH</h3><div class="sub" style="margin-bottom:12px">O nível muda automaticamente conforme a validade cadastrada para cada motorista.</div>
+    <div class="kanban">${col("prazo", "Dentro do prazo", "Mais de 60 dias para o vencimento.", "#15a34a")}${col("media", "Na média", "Entre 31 e 60 dias para organizar a renovação.", "#e8870e")}${col("renovar", "Precisa renovar", "Faltam até 30 dias ou a CNH já venceu.", "#e03131")}</div></div>
+  <div class="card"><h3>Planos cadastrados</h3><div class="sub" style="margin-bottom:10px">Rotinas preventivas por veículo e periodicidade.</div>
+    <div class="table-wrap"><table><thead><tr><th>Plano</th><th>Veículo</th><th>Periodicidade</th><th>Próxima execução</th><th>Ações</th></tr></thead><tbody>
+    ${DB.planos.map(p => { const n = daysBetween(T0, p.proxima); return `<tr><td><b>${esc(p.titulo)}</b></td><td>${esc(vLabel(p.veiculo))}</td><td>${esc(p.periodicidade)}</td><td>${fmtDate(p.proxima)} <span class="tag ${n < 0 ? "danger" : n <= 7 ? "warn" : "ok"}">${n < 0 ? "Atrasado" : `em ${n} dias`}</span></td><td><div class="actions"><button class="link" data-form="planos:${p.id}">Editar</button><button class="link danger" data-del="planos:${p.id}">Excluir</button></div></td></tr>`; }).join("") || `<tr><td colspan="5"><div class="empty">Nenhum plano cadastrado.</div></td></tr>`}
+    </tbody></table></div></div>`;
+  return { html };
+};
+
+/* ================= DOCUMENTOS ================= */
+const refLabel = d => d.tipo === "Veículo" ? vLabel(d.ref) : mot(d.ref).nome;
+PAGES.documentos = () => {
+  const list = [...DB.documentos].sort((a, b) => a.vencimento.localeCompare(b.vencimento));
+  const html = head("Controle documental", "Documentos", "Documentos de veículos e motoristas com vencimento acompanhado.", `<button class="btn" data-form="documentos">Novo documento</button>`) + `
+  <div class="grid g3" style="margin-bottom:14px">${kpi("Documentos", list.length, "cadastrados")}${kpi("A vencer", list.filter(d => docSit(d)[0] === "A vencer").length, "nos próximos 30 dias", "purple")}${kpi("Vencidos", list.filter(d => docSit(d)[0] === "Vencido").length, "precisam de atualização", "red")}</div>
+  ${exportBar("documentos", "Exportar documentos")}
+  <div class="table-wrap"><table><thead><tr><th>Documento</th><th>Tipo</th><th>Referência</th><th>Vencimento</th><th>Situação</th><th>Arquivo</th><th>Ações</th></tr></thead><tbody>
+  ${list.map(d => { const [s, k] = docSit(d); return `<tr><td><b>${esc(d.nome)}</b></td><td>${d.tipo}</td><td>${esc(refLabel(d))}</td><td>${fmtDate(d.vencimento)}</td><td><span class="tag ${k}">${s}</span></td><td class="muted">${esc(d.arquivo || "—")}</td><td><div class="actions"><button class="link" data-form="documentos:${d.id}">Editar</button><button class="link danger" data-del="documentos:${d.id}">Excluir</button></div></td></tr>`; }).join("")}
+  </tbody></table></div>`;
+  return { html };
+};
+
+/* ================= ALERTAS ================= */
+PAGES.alertas = () => {
+  const html = head("Comunicação direcionada", "Alertas", "Crie, ajuste ou apague alertas e escolha quem receberá cada pop-up.", `<button class="btn" data-form="alertas">Novo alerta</button>`) + exportBar("alertas", "Exportar alertas") + `
+  <div class="table-wrap"><table><thead><tr><th>Alerta</th><th>Prioridade</th><th>Status</th><th>Destinatários</th><th>Prazo</th><th>Ações</th></tr></thead><tbody>
+  ${DB.alertas.map(a => `<tr><td style="max-width:420px"><b>${esc(a.titulo)}</b><small>${esc(a.descricao)}</small></td><td>${prioTag(a.prioridade)}</td><td>${statusTag(a.status)}</td><td style="max-width:260px">${esc(a.destinatarios.join(", "))}</td><td>${fmtDate(a.prazo)}</td>
+    <td><div class="actions"><button class="link" data-form="alertas:${a.id}">Ajustar</button><button class="link" data-act="alerta-toggle:${a.id}">${a.status === "Aberto" ? "Encerrar" : "Reabrir"}</button><button class="link danger" data-del="alertas:${a.id}">Apagar</button></div></td></tr>`).join("") || `<tr><td colspan="6"><div class="empty">Nenhum alerta cadastrado.</div></td></tr>`}
+  </tbody></table></div>`;
+  return { html };
+};
+
+/* ================= RELATÓRIOS ================= */
+const REPORTS = [
+  ["motoristas", "Motoristas", "Cadastro completo de motoristas, habilitação, centro de custo e status."],
+  ["empresas", "Empresas", "Empresas atendidas, localização, serviços, postos e quantidade real de veículos vinculados."],
+  ["abastecimentos", "Abastecimentos", "Abastecimentos por veículo, motorista, posto, litros e total."],
+  ["manutencoes", "Manutenções", "Ordens de manutenção com empresa, centro de custo, responsável, status e custo."],
+  ["documentos", "Documentos", "Documentos de veículos e motoristas, datas, situação e proprietário do arquivo."],
+  ["alertas", "Alertas", "Ocorrências e alertas da frota, com severidade, situação e vencimento."],
+  ["planos", "Planos preventivos", "Planos preventivos, veículos vinculados, periodicidade e próximos vencimentos."],
+  ["custosPosto", "Custos por postos", "Ranking de gastos por posto, incluindo abastecimentos e custos lançados pelos fiscais."]
+];
+PAGES.relatorios = sub => {
+  const f = F.rel;
+  if (sub && EXPORTS[sub]) {
+    const r = EXPORTS[sub](); const total = r.total;
+    const html = head("Relatório", r.title, r.sub || "Itens lançados conforme os filtros aplicados.", `${exportChips(sub)}`) + `
+    ${total ? `<div class="grid g4" style="margin-bottom:14px">${kpi(total[0], total[1], `${r.rows.length} registro(s)`)}</div>` : ""}
+    <div class="card"><div class="card-head"><div><div class="section-label">Detalhamento</div><h3>Itens lançados</h3><div class="sub">${r.rows.length} itens encontrados conforme os filtros aplicados.</div></div><a class="btn ghost" href="#/relatorios">Voltar aos relatórios</a></div>
+    <div class="table-wrap"><table><thead><tr>${r.cols.map(c => `<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>${r.rows.map(row => `<tr>${row.map(v => `<td>${esc(v)}</td>`).join("")}</tr>`).join("") || `<tr><td colspan="${r.cols.length}"><div class="empty">Nenhum item com os filtros atuais.</div></td></tr>`}</tbody></table></div></div>`;
+    return { html };
+  }
+  const saved = DB.relSalvos || [];
+  const html = head("Central de relatórios", "Relatórios", "Filtre uma vez e exporte qualquer modelo no formato que precisar.") + `
+  <div class="card" style="margin-bottom:14px"><div class="filters">
+    <div class="field"><label for="re">Empresa</label><select class="input" id="re">${opts(empOpts(), f.empresa, "Todas as empresas")}</select></div>
+    <div class="field"><label for="ri">Data inicial</label><input class="input" type="date" id="ri" value="${f.ini}"></div><div class="field"><label for="rf">Data final</label><input class="input" type="date" id="rf" value="${f.fim}"></div>
+    <div class="field"><label for="rv">Veículo</label><select class="input" id="rv">${opts(vehOpts(), f.veiculo, "Todos os veículos")}</select></div>
+    <div class="field"><label for="rm">Motorista</label><select class="input" id="rm">${opts(motOpts(), f.motorista, "Todos os motoristas")}</select></div>
+    <div class="field"><label for="rc">Centro de custo</label><select class="input" id="rc">${opts(cenOpts(), f.centro, "Todos os centros de custo")}</select></div>
+    <button class="btn" data-act="rel-filtrar">Aplicar filtros</button></div></div>
+  <div class="card" style="margin-bottom:14px"><div class="card-head"><div><b>Relatórios salvos</b><div class="sub">Configurações de filtro salvas pela sua equipe.</div></div><button class="btn ghost sm" data-act="rel-salvar">Salvar filtros atuais</button></div>
+    ${saved.map((s, i) => `<div class="stat-line"><span><b>${esc(s.nome)}</b> <span class="muted">· ${[s.f.ini && fmtDate(s.f.ini), s.f.fim && fmtDate(s.f.fim), s.f.empresa && emp(s.f.empresa).nome].filter(Boolean).join(" · ") || "sem filtros"}</span></span><span class="actions"><button class="link" data-act="rel-aplicar:${i}">Aplicar</button><button class="link danger" data-act="rel-del:${i}">Excluir</button></span></div>`).join("") || `<div class="empty">Nenhum relatório personalizado criado.</div>`}</div>
+  <div class="section-label" style="margin-bottom:4px">Modelos operacionais</div><div class="sub" style="margin-bottom:10px">Relatórios disponíveis automaticamente.</div>
+  <div class="grid g2">${REPORTS.map(([k, t, d]) => `<div class="card"><h3>${t}</h3><div class="sub" style="min-height:36px">${d}</div><div style="display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap"><a class="btn" style="flex:1" href="#/relatorios/${k}">Ver itens lançados</a>${exportChips(k)}</div></div>`).join("")}</div>`;
+  return { html };
+};
+
+/* ================= CENTROS DE CUSTO ================= */
+function centroTotals(c) { const a = DB.abastecimentos.filter(x => x.centro === c.id).reduce((s, x) => s + x.valor, 0), m = DB.manutencoes.filter(x => x.centro === c.id).reduce((s, x) => s + manCost(x), 0), p = DB.custosPosto.filter(x => x.centro === c.id); return { a, m, p: p.reduce((s, x) => s + x.valor, 0), np: p.length }; }
+PAGES.centros = () => {
+  const q = F.centros.q.toLowerCase(); const list = DB.centros.filter(c => !q || (c.codigo + c.nome).toLowerCase().includes(q));
+  const tot = DB.centros.map(centroTotals).reduce((s, t) => ({ a: s.a + t.a, m: s.m + t.m, p: s.p + t.p }), { a: 0, m: 0, p: 0 });
+  const html = head("Organização financeira", "Centros de custo", "Veja quanto cada operação consome em abastecimento, manutenção e custos de posto.", `<button class="btn" data-form="centros">Novo centro de custo</button>`) + `
+  <div class="grid g4" style="margin-bottom:14px">${kpi("Custo total", BRL(tot.a + tot.m + tot.p), "abastecimento, manutenção e postos")}${kpi("Custos de postos", BRL(tot.p), "lançados pelos fiscais", "gray")}${kpi("Abastecimentos", BRL(tot.a), "vinculados a centros de custo", "green")}${kpi("Manutenções", BRL(tot.m), "ordens com centro definido", "purple")}</div>
+  <div class="card" style="margin-bottom:14px"><div class="filters"><div class="field" style="grid-column:span 3"><label for="cq">Buscar</label><input class="input" id="cq" placeholder="Buscar por código ou nome" value="${esc(F.centros.q)}"></div><button class="btn" data-act="cen-filtrar">Filtrar</button></div></div>
+  ${exportBar("centros", "Exportar centros de custo")}
+  <div class="table-wrap"><table><thead><tr><th>Código</th><th>Nome</th><th>Tipo</th><th>Status</th><th class="num">Total apurado</th><th>Lançamentos</th><th>Ações</th></tr></thead><tbody>
+  ${list.map(c => { const t = centroTotals(c); return `<tr><td><b>${c.codigo}</b></td><td>${esc(c.nome)}</td><td>${esc(c.tipo)}</td><td>${statusTag(c.status)}</td><td class="num"><b>${BRL(t.a + t.m + t.p)}</b></td><td>${t.np} custos de posto</td><td><div class="actions"><button class="link" data-act="cenveic:${c.id}">Visualizar veículos</button><button class="link" data-form="centros:${c.id}">Editar</button><button class="link danger" data-del="centros:${c.id}">Excluir</button></div></td></tr>`; }).join("") || `<tr><td colspan="7"><div class="empty">Nenhum centro encontrado.</div></td></tr>`}
+  </tbody></table></div>`;
+  return { html };
+};
+
+/* ================= AUDITORIA ================= */
+PAGES.auditoria = () => {
+  const f = F.aud; const list = DB.auditoria.filter(a => (!f.mod || a.mod === f.mod) && (!f.quem || a.quem === f.quem) && inRange(localDay(a.t), f.ini, f.fim));
+  const days = {}; list.forEach(a => (days[localDay(a.t)] = days[localDay(a.t)] || []).push(a));
+  const label = d => { const n = daysBetween(d, T0); if (n === 0) return "Hoje"; if (n === 1) return "Ontem"; return parseISO(d).toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long", year: "numeric" }); };
+  const cls = { CK: "", MA: "ma", AB: "ab" };
+  const html = head("Governança", "Auditoria", "Linha do tempo de tudo o que foi criado, alterado ou excluído no sistema.") + `
+  <div class="grid g4" style="margin-bottom:14px">${kpi("Alterações", list.length, "no período consultado")}${kpi("Módulos", new Set(list.map(a => a.mod)).size, "movimentações registradas", "purple")}${kpi("Responsáveis", new Set(list.map(a => a.quem)).size, "participaram da timeline", "gray")}${kpi("Hoje", (days[T0] || []).length, "alterações registradas hoje", "green")}</div>
+  <div class="card" style="margin-bottom:6px"><div class="filters"><div><b>Filtrar timeline</b><div class="sub">Refine por módulo, responsável ou período.</div></div>
+    <div class="field"><label for="um">Módulo</label><select class="input" id="um">${opts([...new Set(DB.auditoria.map(a => a.mod))].map(m => [m, m]), f.mod, "Todos os módulos")}</select></div>
+    <div class="field"><label for="uq">Responsável</label><select class="input" id="uq">${opts([...new Set(DB.auditoria.map(a => a.quem))].map(m => [m, m]), f.quem, "Todos os responsáveis")}</select></div>
+    <div class="field"><label for="ui">Data inicial</label><input class="input" type="date" id="ui" value="${f.ini}"></div><div class="field"><label for="uf">Data final</label><input class="input" type="date" id="uf" value="${f.fim}"></div>
+    <button class="btn" data-act="aud-filtrar">Filtrar</button></div></div>
+  ${Object.keys(days).sort().reverse().map(d => `<div class="tl-day">${label(d)} <span class="muted" style="font-weight:400">${days[d].length} alteração(ões)</span></div>${days[d].map(a => `<div class="tl-item"><span class="avatar ${cls[a.code] ?? "mint"}">${a.code}</span><div><b>${esc(a.quem)}</b><div>${esc(a.acao)}</div><div class="sub">${esc(a.det)}</div><div class="chips" style="margin-top:6px"><span class="tag mint">${esc(a.mod)}</span><span class="tag">${esc(a.perfil)}</span></div></div><span class="time">${fmtTime(a.t)}</span></div>`).join("")}`).join("") || `<div class="empty" style="margin-top:12px">Nenhuma alteração encontrada com esses filtros.</div>`}`;
+  return { html };
+};
+function localDay(iso) { const d = new Date(iso); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; }
+
+/* ================= PERSONALIZAÇÃO ================= */
+let PCFG = null;
+PAGES.personalizacao = () => {
+  PCFG = Object.assign({}, CFG);
+  const html = head("Personalização", "Configurações do sistema", "Altere identidade visual, logo e cores sem publicar uma nova versão.") + `
+  <div class="grid g2" style="align-items:start">
+  <div class="card"><h3>Aparência</h3><div class="sub" style="margin-bottom:12px">Essas configurações valem para todos os usuários da organização.</div><div class="stack">
+    <div class="field"><label for="pn">Nome exibido</label><input class="input" id="pn" value="${esc(PCFG.nome)}" maxlength="28"></div>
+    <div class="field"><label for="pl">Logo</label><input class="input" id="pl" type="file" accept="image/*"><span class="muted" style="font-size:12px">Envie uma imagem de até 10 MB. Ela será otimizada automaticamente.</span>
+      <label style="display:flex;gap:8px;align-items:center;font-size:13px"><input type="checkbox" id="plr" ${PCFG.logo ? "" : "checked"}> Usar logo padrão</label></div>
+    <div class="grid g2">
+      <div class="field"><label for="pc1">Cor principal</label><div class="color-row"><input type="color" id="pc1" value="${PCFG.primary}"><input class="input" id="pc1t" value="${PCFG.primary}" maxlength="7" aria-label="Cor principal em hexadecimal"></div></div>
+      <div class="field"><label for="pc2">Cor de destaque</label><div class="color-row"><input type="color" id="pc2" value="${PCFG.accent}"><input class="input" id="pc2t" value="${PCFG.accent}" maxlength="7" aria-label="Cor de destaque em hexadecimal"></div></div>
+      <div class="field"><label for="pc3">Cor da sidebar</label><div class="color-row"><input type="color" id="pc3" value="${PCFG.sidebar}"><input class="input" id="pc3t" value="${PCFG.sidebar}" maxlength="7" aria-label="Cor da sidebar em hexadecimal"></div></div>
+      <div class="field"><label for="pt">Tema</label><select class="input" id="pt">${opts([["light", "Claro"], ["dark", "Escuro"], ["system", "Seguir o dispositivo"]], PCFG.theme)}</select></div>
+    </div>
+    <button class="btn block" data-act="cfg-salvar">Salvar personalizações</button>
+    <button class="btn ghost" data-act="cfg-padrao">Restaurar padrão</button></div></div>
+  <div class="card"><h3>Prévia</h3><div class="sub" style="margin-bottom:12px">Visual aplicado no menu e no login.</div><div id="pv"></div>
+    <div class="sub" style="margin-top:12px">Paletas sugeridas</div><div class="chips" style="margin-top:6px">${[["Menta", "#56e1c6", "#5f6368", "#72dfd8"], ["Oceano", "#3b82f6", "#475569", "#bcd7ff"], ["Grafite", "#f59e0b", "#374151", "#2f3a45"], ["Vinho", "#c8102e", "#4b5563", "#f3d6db"]].map(p => `<button class="chip" data-pal="${p.slice(1).join(",")}"><span class="dot" style="background:${p[1]}"></span> ${p[0]}</button>`).join("")}</div></div></div>`;
+  return { html, after: root => {
+    const pv = () => { root.querySelector("#pv").innerHTML = `<div class="preview"><div class="pv-side" style="background:${PCFG.sidebar};color:${lum(PCFG.sidebar) > .3 ? "#10302b" : "#f3f7f6"}"><div class="brand-logo" style="width:64px"><img src="${logoSrc(PCFG)}" alt=""></div><b style="font-family:'Roboto Condensed'">${esc(PCFG.nome)}</b><span style="background:#fff;color:${shade(PCFG.primary, .45)}">Dashboard</span><span>Veículos</span><span>Relatórios</span></div>
+      <div class="pv-main"><span class="tag" style="align-self:flex-start;background:${PCFG.accent};color:#fff;border:0">Ativo</span><b>Cartão de exemplo</b><div style="height:8px;border-radius:6px;background:${PCFG.primary};width:70%"></div><button class="btn" style="background:${PCFG.primary};color:${lum(PCFG.primary) > .35 ? shade(PCFG.primary, .78) : "#fff"}">Ação principal</button></div></div>`; };
+    const bind = (a, b, k) => { const A = root.querySelector(a), B = root.querySelector(b); A.oninput = () => { PCFG[k] = A.value; B.value = A.value; pv(); }; B.oninput = () => { if (/^#[0-9a-f]{6}$/i.test(B.value)) { PCFG[k] = B.value; A.value = B.value; pv(); } }; };
+    bind("#pc1", "#pc1t", "primary"); bind("#pc2", "#pc2t", "accent"); bind("#pc3", "#pc3t", "sidebar");
+    root.querySelector("#pn").oninput = e => { PCFG.nome = e.target.value || "Prime Frotas"; pv(); };
+    root.querySelector("#pt").onchange = e => { PCFG.theme = e.target.value; };
+    root.querySelector("#plr").onchange = e => { if (e.target.checked) { PCFG.logo = null; pv(); } };
+    root.querySelector("#pl").onchange = e => { const f = e.target.files[0]; if (!f) return; if (f.size > 10 * 1024 * 1024) { toast("A imagem passa de 10 MB. Escolha um arquivo menor.", "err"); return; } readPhoto(f, url => { PCFG.logo = url; root.querySelector("#plr").checked = false; pv(); }); };
+    root.querySelectorAll("[data-pal]").forEach(b => b.onclick = () => { const [p, a, s] = b.dataset.pal.split(","); Object.assign(PCFG, { primary: p, accent: a, sidebar: s }); ["1", "2", "3"].forEach((n, i) => { root.querySelector("#pc" + n).value = [p, a, s][i]; root.querySelector("#pc" + n + "t").value = [p, a, s][i]; }); pv(); });
+    pv();
+  } };
+};
+
+/* ================= USUÁRIOS ================= */
+PAGES.usuarios = () => {
+  const html = head("Segurança", "Usuários e acessos", "Defina quem acessa o sistema e quais módulos cada perfil enxerga.", `<button class="btn" data-form="usuarios">Novo usuário</button>`) + exportBar("usuarios", "Exportar usuários") + `
+  <div class="stack">${DB.usuarios.map(u => `<div class="card ucard"><span class="avatar mint" style="width:44px;height:44px">${u.nome.split(" ").map(p => p[0]).slice(0, 2).join("").toUpperCase()}</span>
+    <div><div class="row1"><b style="font-size:15px">${esc(u.nome)}</b>${statusTag(u.status)}<span class="muted" style="font-size:12.5px">${esc(u.email)}</span></div>
+      <div class="info"><div><small>Perfil</small>${esc(u.perfil)}</div><div><small>Módulos liberados</small>${u.modulos.length} de ${MODULES.length}</div><div><small>Último acesso</small>${fmtDateTime(u.ultimo)}</div></div>
+      <div class="chips" style="margin-top:8px">${u.modulos.slice(0, 6).map(m => `<span class="tag">${MODULES.find(x => x[0] === m)[2]}</span>`).join("")}${u.modulos.length > 6 ? `<span class="tag">+${u.modulos.length - 6}</span>` : ""}</div></div>
+    <div class="btns"><button class="btn soft" data-form="usuarios:${u.id}">Editar usuário</button><button class="btn soft" data-act="acessos:${u.id}">Gerenciar acessos</button><button class="btn soft" data-act="resetsenha:${u.id}">Redefinir senha</button></div></div>`).join("")}</div>`;
+  return { html };
+};
+function gerenciarAcessos(id) {
+  const u = byId("usuarios", id); const isMe = id === ME().id;
+  openModal({ sub: "Gerenciar acessos", title: esc(u.nome), body: `<p class="muted" style="margin-top:0">Marque os módulos que este usuário pode acessar.${isMe ? " Seu próprio acesso a Usuários e acessos fica sempre liberado." : ""}</p>
+    <div class="grid g2">${MODULES.map(([k, c, l]) => `<label class="q" style="display:flex;gap:10px;align-items:center;cursor:pointer"><input type="checkbox" value="${k}" ${u.modulos.includes(k) ? "checked" : ""} ${isMe && (k === "usuarios" || k === "painel") ? "disabled" : ""}> <span class="tag">${c}</span> ${l}</label>`).join("")}</div>`,
+    foot: `<button class="btn ghost" data-close>Cancelar</button><button class="btn" id="saveAc">Salvar acessos</button>`,
+    onMount: w => w.querySelector("#saveAc").onclick = () => { const sel = [...w.querySelectorAll("input:checked")].map(i => i.value); if (isMe) ["painel", "usuarios"].forEach(k => sel.includes(k) || sel.push(k)); u.modulos = MODULES.map(m => m[0]).filter(k => sel.includes(k)); audit("Usuários", "US", `ajustou os acessos de ${u.nome}`, `${u.modulos.length} de ${MODULES.length} módulos`); save(); closeModal(); if (isMe) refreshShell(); else rerender(); toast("Acessos atualizados."); } });
+}
+
+/* ================= FORMULÁRIOS GENÉRICOS ================= */
+const FORMS = {
+  empresas: { t: "empresa", mod: "Empresas", code: "EM", label: r => r.nome, f: [["nome", "Nome da empresa", "text", 1, 1], ["cnpj", "CNPJ", "text", 1], ["cidade", "Cidade", "text", 1], ["servicos", "Serviços (separe por vírgula)", "list", 0, 1], ["postos", "Quantidade de postos", "number", 1]] },
+  veiculos: { t: "veículo", mod: "Veículos", code: "VE", label: r => r.placa, f: [["placa", "Placa", "text", 1], ["modelo", "Modelo", "text", 1], ["tipo", "Tipo", ["Carro", "Moto"], 1], ["combustivel", "Combustível", ["Flex", "Gasolina", "Etanol", "Diesel"], 1], ["empresa", "Empresa", empOpts, 1], ["centro", "Centro de custo", cenOpts, 1], ["km", "Hodômetro (km)", "number", 1], ["ano", "Ano", "number", 0], ["status", "Status", ["Ativo", "Disponível", "Em manutenção", "Inativo"], 1]] },
+  motoristas: { t: "motorista", mod: "Motoristas", code: "MO", label: r => r.nome, f: [["nome", "Nome completo", "text", 1, 1], ["matricula", "Matrícula", "text", 1], ["cnh", "Número da CNH", "text", 1], ["categoria", "Categoria", ["A", "B", "AB", "C", "D", "E"], 1], ["validade", "Validade da CNH", "date", 1], ["empresa", "Empresa", empOpts, 1], ["veiculo", "Veículo vinculado", vehOpts, 0], ["status", "Status", ["Ativo", "Inativo"], 1]] },
+  abastecimentos: { t: "abastecimento", mod: "Abastecimentos", code: "AB", label: r => veic(r.veiculo).placa, f: [["data", "Data", "date", 1], ["veiculo", "Veículo", vehOpts, 1], ["motorista", "Motorista", motOpts, 1], ["posto", "Posto", "text", 1], ["combustivel", "Combustível", ["Gasolina", "Etanol", "Diesel"], 1], ["litros", "Litros", "number", 1], ["valor", "Valor total (R$)", "number", 1], ["km", "Hodômetro (km)", "number", 0], ["centro", "Centro de custo", cenOpts, 1], ["comprovantes", "Comprovantes anexados", "number", 0]] },
+  manutencoes: { t: "manutenção", mod: "Manutenções", code: "MA", label: r => r.titulo, f: [["titulo", "Título do serviço", "text", 1, 1], ["veiculo", "Veículo", vehOpts, 1], ["tipo", "Tipo", ["Corretiva", "Preventiva"], 1], ["status", "Status", Object.entries(MAN_STATUS).map(([k, v]) => [k, v]), 1], ["prioridade", "Prioridade", ["Baixa", "Média", "Alta"], 1], ["fornecedor", "Fornecedor", "text", 0], ["programada", "Data programada", "date", 1], ["inicio", "Data de início", "date", 0], ["conclusao", "Data de conclusão", "date", 0], ["hodometro", "Hodômetro", "number", 0], ["maoDeObra", "Mão de obra (R$)", "number", 0], ["pecas", "Peças (R$)", "number", 0], ["outros", "Outros custos (R$)", "number", 0], ["obs", "Observações", "textarea", 0, 1]] },
+  documentos: { t: "documento", mod: "Documentos", code: "DO", label: r => r.nome, f: [["nome", "Documento", "text", 1], ["tipo", "Tipo", ["Veículo", "Motorista"], 1], ["ref", "Referência", () => [...vehOpts(), ...motOpts()], 1], ["vencimento", "Vencimento", "date", 1], ["arquivo", "Nome do arquivo", "text", 0, 1]] },
+  alertas: { t: "alerta", mod: "Alertas", code: "AL", label: r => r.titulo, f: [["titulo", "Título", "text", 1, 1], ["descricao", "Descrição", "textarea", 1, 1], ["prioridade", "Prioridade", ["Baixa", "Média", "Alta", "Crítica"], 1], ["status", "Status", ["Aberto", "Encerrado"], 1], ["prazo", "Prazo", "date", 1], ["destinatarios", "Destinatários (separe por vírgula)", "list", 1, 1]] },
+  centros: { t: "centro de custo", mod: "Centros de custo", code: "CC", label: r => r.nome, f: [["codigo", "Código", "text", 1], ["nome", "Nome", "text", 1], ["tipo", "Tipo", ["OPERAÇÃO", "ADMINISTRATIVO"], 1], ["status", "Status", ["Ativo", "Inativo"], 1]] },
+  planos: { t: "plano preventivo", mod: "Planos preventivos", code: "PP", label: r => r.titulo, f: [["titulo", "Plano", "text", 1, 1], ["veiculo", "Veículo", vehOpts, 1], ["periodicidade", "Periodicidade", "text", 1], ["proxima", "Próxima execução", "date", 1]] },
+  usuarios: { t: "usuário", mod: "Usuários", code: "US", label: r => r.nome, f: [["nome", "Nome", "text", 1], ["email", "E-mail", "email", 1], ["perfil", "Perfil", ["Administrador", "Gestor", "Supervisor", "Consulta"], 1], ["status", "Status", ["Ativo", "Inativo"], 1]] },
+  checklists: { t: "checklist", mod: "Checklists", code: "CK", label: r => veic(r.veiculo).placa }
+};
+function openForm(entity, id) {
+  const spec = FORMS[entity], rec = id ? byId(entity, id) : null, v = rec || {};
+  const field = ([k, l, type, req, full]) => {
+    const value = v[k] ?? (type === "date" ? T0 : ""); const lab = `<label for="f-${k}">${l}${req ? ' <span class="req">*</span>' : ""}</label>`;
+    let input;
+    if (Array.isArray(type) || typeof type === "function") { const list = typeof type === "function" ? type() : type.map(x => Array.isArray(x) ? x : [x, x]); input = `<select class="input" id="f-${k}">${opts(list, value, "Selecione")}</select>`; }
+    else if (type === "textarea") input = `<textarea class="input" id="f-${k}">${esc(value)}</textarea>`;
+    else if (type === "list") input = `<input class="input" id="f-${k}" value="${esc((value || []).join ? value.join(", ") : value)}">`;
+    else input = `<input class="input" id="f-${k}" type="${type}" ${type === "number" ? 'step="any" inputmode="decimal"' : ""} value="${esc(value)}">`;
+    return `<div class="field${full ? " full" : ""}">${lab}${input}<span class="err hidden" id="e-${k}">Campo obrigatório.</span></div>`;
+  };
+  openModal({ sub: id ? "Editar" : "Novo cadastro", title: `${id ? "Editar" : "Novo(a)"} ${spec.t}`, body: `<form id="gform" class="form-grid">${spec.f.map(field).join("")}${entity === "manutencoes" ? `<div class="field full"><label>Custo total</label><div class="input" id="mtotal" style="display:flex;align-items:center;font-weight:700">${BRL(manCost(v))}</div></div>` : ""}</form>`,
+    foot: `<button class="btn ghost" data-close>Cancelar</button><button class="btn" id="gsave">${id ? "Salvar alterações" : `Criar ${spec.t}`}</button>`,
+    onMount: w => {
+      if (entity === "manutencoes") ["maoDeObra", "pecas", "outros"].forEach(k => w.querySelector("#f-" + k).addEventListener("input", () => { w.querySelector("#mtotal").textContent = BRL(["maoDeObra", "pecas", "outros"].reduce((s, x) => s + (+w.querySelector("#f-" + x).value || 0), 0)); }));
+      if (entity === "abastecimentos") w.querySelector("#f-veiculo").addEventListener("change", e => { const vv = byId("veiculos", e.target.value); if (vv) { w.querySelector("#f-centro").value = vv.centro; const d = DB.motoristas.find(m => m.veiculo === vv.id); if (d) w.querySelector("#f-motorista").value = d.id; } });
+      w.querySelector("#gsave").onclick = () => {
+        let ok = true; const out = {};
+        spec.f.forEach(([k, , type, req]) => { let x = w.querySelector("#f-" + k).value.trim(); const e = w.querySelector("#e-" + k); const miss = req && !x; e.classList.toggle("hidden", !miss); if (miss) ok = false;
+          if (type === "number") x = x === "" ? 0 : +x.replace(",", "."); if (type === "list") x = x.split(",").map(s => s.trim()).filter(Boolean); if (k === "placa") x = x.toUpperCase(); out[k] = x; });
+        if (!ok) { toast("Preencha os campos obrigatórios destacados.", "err"); return; }
+        if (rec) Object.assign(rec, out); else { const n = Object.assign({ id: uid(entity.slice(0, 2)) }, out); if (entity === "usuarios") Object.assign(n, { modulos: ["painel", "veiculos", "abastecimentos", "checklist"], ultimo: "" }); if (entity === "manutencoes") n.responsavel = ME().nome; if (entity === "abastecimentos") DB[entity].unshift(n); else DB[entity].push(n); }
+        audit(spec.mod, spec.code, `${rec ? "atualizou" : "criou"} ${spec.t} ${spec.label(Object.assign({}, v, out))}`, "Alteração registrada em " + spec.mod + ".");
+        save(); closeModal(); rerender(); toast(rec ? "Alterações salvas." : `${spec.t[0].toUpperCase() + spec.t.slice(1)} criado(a).`);
+      };
+    } });
+}
+function deleteRec(entity, id) {
+  const spec = FORMS[entity], rec = byId(entity, id); if (!rec) return;
+  if (entity === "usuarios" && id === ME().id) { toast("Não é possível excluir o usuário que está conectado.", "err"); return; }
+  confirmBox(`Excluir ${spec.t} ${esc(spec.label(rec))}?`, () => { DB[entity] = DB[entity].filter(x => x.id !== id); audit(spec.mod, spec.code, `excluiu ${spec.t} ${spec.label(rec)}`, "Alteração registrada em " + spec.mod + "."); save(); rerender(); toast(`${spec.t[0].toUpperCase() + spec.t.slice(1)} excluído(a).`); });
+}
+
+/* ================= EXPORTAÇÕES ================= */
+function relFilter(list, dateKey, vehKey) { const f = F.rel; return list.filter(x => { const v = vehKey ? veic(x[vehKey]) : null; return inRange(x[dateKey] || "", f.ini, f.fim) && (!f.veiculo || !vehKey || x[vehKey] === f.veiculo) && (!f.empresa || !v || v.empresa === f.empresa) && (!f.centro || !x.centro || x.centro === f.centro) && (!f.motorista || !x.motorista || x.motorista === f.motorista); }); }
+const EXPORTS = {
+  empresas: () => ({ title: "Empresas", cols: ["Empresa", "CNPJ", "Cidade", "Serviços", "Postos", "Veículos vinculados"], rows: DB.empresas.map(e => [e.nome, e.cnpj, e.cidade, e.servicos.join(", "), e.postos, DB.veiculos.filter(v => v.empresa === e.id).length]) }),
+  veiculos: () => ({ title: "Veículos", cols: ["Placa", "Modelo", "Tipo", "Empresa", "Centro de custo", "Combustível", "Hodômetro (km)", "Status"], rows: DB.veiculos.map(v => [v.placa, v.modelo, v.tipo, emp(v.empresa).nome, cLabel(v.centro), v.combustivel, v.km, v.status]) }),
+  motoristas: () => ({ title: "Motoristas", cols: ["Nome", "Matrícula", "CNH", "Categoria", "Validade", "Empresa", "Veículo", "Status"], rows: DB.motoristas.filter(m => !F.rel.empresa || m.empresa === F.rel.empresa).map(m => [m.nome, m.matricula, m.cnh, m.categoria, fmtDate(m.validade), emp(m.empresa).nome, m.veiculo ? vLabel(m.veiculo) : "", m.status]) }),
+  abastecimentos: () => { const l = relFilter(DB.abastecimentos, "data", "veiculo"); return { title: "Abastecimentos", total: ["Total em abastecimentos", BRL(l.reduce((s, a) => s + a.valor, 0))], cols: ["Data", "Veículo", "Motorista", "Posto", "Combustível", "Litros", "Valor (R$)", "Centro de custo"], rows: l.map(a => [fmtDate(a.data), vLabel(a.veiculo), mot(a.motorista).nome, a.posto, a.combustivel, NUM(a.litros, 3), NUM(a.valor, 2), cLabel(a.centro)]) }; },
+  abastSel: () => { const l = DB.abastecimentos.filter(a => selAbast.has(a.id)); return { title: "Abastecimentos selecionados", cols: ["Data", "Veículo", "Motorista", "Posto", "Litros", "Valor (R$)"], rows: l.map(a => [fmtDate(a.data), vLabel(a.veiculo), mot(a.motorista).nome, a.posto, NUM(a.litros, 3), NUM(a.valor, 2)]) }; },
+  manutencoes: () => { const l = relFilter(DB.manutencoes, "programada", "veiculo"); return { title: "Manutenções", total: ["Total em manutenções", BRL(l.reduce((s, m) => s + manCost(m), 0))], cols: ["Registro", "Título", "Veículo", "Empresa", "Centro de custo", "Responsável", "Tipo", "Status", "Prioridade", "Fornecedor", "Mão de obra", "Peças", "Total"], rows: l.map(m => [fmtDate(m.programada), m.titulo, vLabel(m.veiculo), emp(veic(m.veiculo).empresa).nome, cLabel(m.centro), m.responsavel, m.tipo, MAN_STATUS[m.status], m.prioridade, m.fornecedor, NUM(m.maoDeObra, 2), NUM(m.pecas, 2), NUM(manCost(m), 2)]) }; },
+  documentos: () => ({ title: "Documentos", cols: ["Documento", "Tipo", "Referência", "Vencimento", "Situação", "Arquivo"], rows: DB.documentos.map(d => [d.nome, d.tipo, refLabel(d), fmtDate(d.vencimento), docSit(d)[0], d.arquivo || ""]) }),
+  alertas: () => ({ title: "Alertas", cols: ["Alerta", "Descrição", "Prioridade", "Status", "Destinatários", "Prazo"], rows: DB.alertas.map(a => [a.titulo, a.descricao, a.prioridade, a.status, a.destinatarios.join(", "), fmtDate(a.prazo)]) }),
+  planos: () => ({ title: "Planos preventivos", cols: ["Plano", "Veículo", "Periodicidade", "Próxima execução"], rows: [...DB.planos.map(p => [p.titulo, vLabel(p.veiculo), p.periodicidade, fmtDate(p.proxima)]), ...DB.motoristas.filter(m => m.status === "Ativo").map(m => [`Renovação de CNH — ${m.nome}`, m.veiculo ? vLabel(m.veiculo) : "", "Validade da CNH", fmtDate(m.validade)])] }),
+  custosPosto: () => { const rows = DB.centros.map(c => { const t = centroTotals(c); return [c.codigo + " - " + c.nome, NUM(t.a, 2), NUM(t.p, 2), NUM(t.a + t.p, 2), t.a + t.p]; }).sort((a, b) => b[4] - a[4]); return { title: "Custos por postos", total: ["Total em postos e abastecimentos", BRL(rows.reduce((s, r) => s + r[4], 0))], cols: ["Centro / posto", "Abastecimentos (R$)", "Custos de posto (R$)", "Total (R$)"], rows: rows.map(r => r.slice(0, 4)) }; },
+  centros: () => ({ title: "Centros de custo", cols: ["Código", "Nome", "Tipo", "Status", "Abastecimentos", "Manutenções", "Custos de posto", "Total"], rows: DB.centros.map(c => { const t = centroTotals(c); return [c.codigo, c.nome, c.tipo, c.status, NUM(t.a, 2), NUM(t.m, 2), NUM(t.p, 2), NUM(t.a + t.m + t.p, 2)]; }) }),
+  usuarios: () => ({ title: "Usuários e acessos", cols: ["Nome", "E-mail", "Perfil", "Status", "Módulos liberados", "Último acesso"], rows: DB.usuarios.map(u => [u.nome, u.email, u.perfil, u.status, `${u.modulos.length} de ${MODULES.length}`, u.ultimo ? fmtDateTime(u.ultimo) : "—"]) })
+};
+async function doExport(key, fmt) {
+  const r = EXPORTS[key](); if (!r.rows.length) { toast(key === "abastSel" ? "Marque ao menos um lançamento na tabela." : "Não há itens para exportar com os filtros atuais.", "err"); return; }
+  const base = `${r.title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "-")}-${T0}`;
+  if (fmt === "csv") { const q = x => `"${String(x).replace(/"/g, '""')}"`; return saveFile(base + ".csv", "\ufeff" + [r.cols, ...r.rows].map(row => row.map(q).join(";")).join("\r\n")); }
+  if (fmt === "json") return saveFile(base + ".json", JSON.stringify(r.rows.map(row => Object.fromEntries(r.cols.map((c, i) => [c, row[i]]))), null, 2));
+  if (fmt === "xlsx") { if (!window.XLSX) { toast("Exportação para Excel indisponível sem conexão.", "err"); return; } const wb = XLSX.utils.book_new(); const ws = XLSX.utils.aoa_to_sheet([r.cols, ...r.rows]); ws["!cols"] = r.cols.map(c => ({ wch: Math.max(12, c.length + 4) })); XLSX.utils.book_append_sheet(wb, ws, r.title.slice(0, 30)); return saveFile(base + ".xlsx", new Blob([XLSX.write(wb, { bookType: "xlsx", type: "array" })])); }
+  if (fmt === "pdf") { if (!window.jspdf) { toast("Gerador de PDF indisponível sem conexão.", "err"); return; } const doc = new window.jspdf.jsPDF({ orientation: "landscape", unit: "pt", format: "a4" }); const W = doc.internal.pageSize.getWidth();
+    doc.setFillColor(200, 16, 46); doc.rect(0, 0, W, 8, "F"); doc.setFont("helvetica", "bold"); doc.setFontSize(18); doc.text(`${CFG.nome} · ${r.title}`, 40, 44); doc.setFont("helvetica", "normal"); doc.setFontSize(10); doc.setTextColor(110); doc.text(`Gerado em ${fmtDateTime(new Date().toISOString())} · ${r.rows.length} registro(s) · Organização Demonstração`, 40, 60);
+    doc.autoTable({ startY: 76, head: [r.cols], body: r.rows, styles: { fontSize: 8 }, headStyles: { fillColor: hexToRgb(CFG.primary), textColor: lum(CFG.primary) > .35 ? 20 : 255 }, alternateRowStyles: { fillColor: [246, 248, 250] } });
+    return saveFile(base + ".pdf", doc.output("blob")); }
+}
+
+/* ================= EVENTOS ================= */
+document.addEventListener("click", e => {
+  const t = e.target.closest("[data-act],[data-form],[data-del],[data-export],[data-ans],[data-avtipo],[data-avvista],[data-map],[data-nav]"); if (!t) return;
+  if (t.dataset.nav !== undefined) { document.getElementById("app")?.classList.remove("nav-open"); return; }
+  if (t.dataset.form) { const [en, id] = t.dataset.form.split(":"); openForm(en, id); return; }
+  if (t.dataset.del) { const [en, id] = t.dataset.del.split(":"); deleteRec(en, id); return; }
+  if (t.dataset.export) { const [k, f] = t.dataset.export.split(":"); doExport(k, f); return; }
+  if (t.dataset.ans) { const [k, v] = t.dataset.ans.split("|"); if (k === "__avaria") { DRAFT.temAvaria = v === "Sim"; if (DRAFT.temAvaria && !DRAFT.avarias.length) DRAFT.avarias.push(newAvaria()); } else DRAFT.respostas[k] = v; delete DRAFT_ERR["r_" + k]; rerender(); return; }
+  if (t.dataset.avtipo) { const [i, v] = t.dataset.avtipo.split("|"); DRAFT.avarias[i].ui.tipo = v; rerender(); return; }
+  if (t.dataset.avvista) { const [i, v] = t.dataset.avvista.split("|"); DRAFT.avarias[i].ui.vista = v; rerender(); return; }
+  if (t.dataset.map !== undefined) { const a = DRAFT.avarias[+t.dataset.map]; const b = t.getBoundingClientRect(); const x = +((e.clientX - b.left) / b.width * 100).toFixed(1), y = +((e.clientY - b.top) / b.height * 100).toFixed(1);
+    const near = a.marcas.findIndex(m => m.tipo === a.ui.tipo && m.vista === a.ui.vista && Math.hypot((m.x - x) * b.width / 100, (m.y - y) * b.height / 100) < 16);
+    if (near >= 0) a.marcas.splice(near, 1); else a.marcas.push({ tipo: a.ui.tipo, vista: a.ui.vista, x, y }); rerender(); return; }
+  const [act, arg] = t.dataset.act.split(":");
+  const A = {
+    logout: () => { LOGGED = false; store.del(KEY_LOGIN); alertShown = false; location.hash = ""; document.getElementById("root").innerHTML = ""; render(); },
+    opennav: () => document.getElementById("app").classList.add("nav-open"), closenav: () => document.getElementById("app").classList.remove("nav-open"),
+    senha: () => openModal({ title: "Minha senha", body: `<div class="stack"><div class="field"><label for="s1">Senha atual</label><input class="input" type="password" id="s1"></div><div class="field"><label for="s2">Nova senha</label><input class="input" type="password" id="s2"></div><div class="field"><label for="s3">Confirmar nova senha</label><input class="input" type="password" id="s3"></div></div>`, foot: `<button class="btn ghost" data-close>Cancelar</button><button class="btn" id="ss">Salvar nova senha</button>`, onMount: w => w.querySelector("#ss").onclick = () => { const a = w.querySelector("#s2").value, b = w.querySelector("#s3").value; if (a.length < 6) return toast("A nova senha precisa ter pelo menos 6 caracteres.", "err"); if (a !== b) return toast("A confirmação não confere com a nova senha.", "err"); closeModal(); toast("Senha alterada. Na demonstração, o acesso continua o mesmo."); } }),
+    resetdb: () => confirmBox("Restaurar os dados de demonstração?", () => { DB = seedDB(); save(); DRAFT = null; selAbast.clear(); refreshShell(); toast("Dados de demonstração restaurados."); }, "Restaurar"),
+    "painel-filtrar": () => { Object.assign(F.painel, { veiculo: val("fv"), ini: val("fi"), fim: val("ff"), centro: val("fc"), empresa: val("fe") }); rerender(); },
+    "veic-filtrar": () => { Object.assign(F.veiculos, { q: val("vq"), empresa: val("ve"), status: val("vs") }); rerender(); },
+    "mot-filtrar": () => { Object.assign(F.motoristas, { q: val("mq"), empresa: val("me") }); rerender(); },
+    "abast-filtrar": () => { Object.assign(F.abast, { q: val("aq"), veiculo: val("av"), ini: val("ai"), fim: val("af") }); rerender(); },
+    "abast-all": () => { const on = t.checked; document.querySelectorAll("[data-sel]").forEach(c => { c.checked = on; on ? selAbast.add(c.dataset.sel) : selAbast.delete(c.dataset.sel); }); rerender(); },
+    "man-filtrar": () => { Object.assign(F.man, { ini: val("mi"), fim: val("mf"), veiculo: val("mv"), centro: val("mc"), empresa: val("mE") }); rerender(); },
+    "ck-filtrar": () => { Object.assign(F.ck, { veiculo: val("kv"), ini: val("ki"), fim: val("kf") }); rerender(); },
+    "cen-filtrar": () => { F.centros.q = val("cq"); rerender(); },
+    "aud-filtrar": () => { Object.assign(F.aud, { mod: val("um"), quem: val("uq"), ini: val("ui"), fim: val("uf") }); rerender(); },
+    "rel-filtrar": () => { Object.assign(F.rel, { empresa: val("re"), ini: val("ri"), fim: val("rf"), veiculo: val("rv"), motorista: val("rm"), centro: val("rc") }); rerender(); toast("Filtros aplicados aos modelos de relatório."); },
+    "rel-salvar": () => openModal({ title: "Salvar filtros atuais", body: `<div class="field"><label for="rn">Nome do relatório</label><input class="input" id="rn" placeholder="Ex.: Custos do contrato Porto Norte"></div>`, foot: `<button class="btn ghost" data-close>Cancelar</button><button class="btn" id="rs">Salvar relatório</button>`, onMount: w => w.querySelector("#rs").onclick = () => { const n = w.querySelector("#rn").value.trim(); if (!n) return toast("Dê um nome ao relatório.", "err"); Object.assign(F.rel, { empresa: val("re"), ini: val("ri"), fim: val("rf"), veiculo: val("rv"), motorista: val("rm"), centro: val("rc") }); (DB.relSalvos = DB.relSalvos || []).push({ nome: n, f: Object.assign({}, F.rel) }); save(); closeModal(); rerender(); toast("Relatório salvo."); } }),
+    "rel-aplicar": () => { Object.assign(F.rel, DB.relSalvos[+arg].f); rerender(); toast("Filtros do relatório aplicados."); },
+    "rel-del": () => { DB.relSalvos.splice(+arg, 1); save(); rerender(); },
+    empdash: () => empresaDash(arg), ficha: () => fichaVeiculo(arg), ckopen: () => openChecklist(arg), ckpdf: () => checklistPDF(arg), acessos: () => gerenciarAcessos(arg),
+    resetsenha: () => { const u = byId("usuarios", arg); audit("Usuários", "US", `enviou redefinição de senha para ${u.nome}`, u.email); save(); toast(`Link de redefinição enviado para ${u.email} (simulado).`); },
+    cenveic: () => { const c = cen(arg), vs = DB.veiculos.filter(v => v.centro === arg); openModal({ sub: "Centro de custo " + c.codigo, title: esc(c.nome), body: vs.map(v => `<div class="stat-line"><span><b>${v.placa}</b> · ${esc(v.modelo)}</span>${statusTag(v.status)}</div>`).join("") || `<div class="empty">Nenhum veículo neste centro.</div>`, foot: `<span></span><button class="btn" data-close>Fechar</button>` }); },
+    "alerta-toggle": () => { const a = byId("alertas", arg); a.status = a.status === "Aberto" ? "Encerrado" : "Aberto"; audit("Alertas", "AL", `${a.status === "Aberto" ? "reabriu" : "encerrou"} o alerta “${a.titulo}”`); save(); rerender(); toast(`Alerta ${a.status === "Aberto" ? "reaberto" : "encerrado"}.`); },
+    "av-add": () => { DRAFT.avarias.push(newAvaria()); rerender(); },
+    "av-del": () => { DRAFT.avarias.splice(+arg, 1); rerender(); },
+    "av-clear": () => { DRAFT.avarias[+arg].marcas = []; rerender(); },
+    "av-clearview": () => { const a = DRAFT.avarias[+arg]; a.marcas = a.marcas.filter(m => !(m.tipo === a.ui.tipo && m.vista === a.ui.vista)); rerender(); },
+    "ck-finalizar": finalizarChecklist,
+    "cfg-salvar": () => { CFG = Object.assign({}, PCFG); store.set(KEY_CFG, CFG); applyCfg(); audit("Personalização", "PE", "salvou a personalização do sistema", `Cores ${CFG.primary} · ${CFG.accent} · ${CFG.sidebar}`); save(); refreshShell(); toast("Personalização salva."); },
+    "cfg-padrao": () => { CFG = Object.assign({}, DEFAULT_CFG); store.set(KEY_CFG, CFG); applyCfg(); refreshShell(); toast("Aparência padrão restaurada."); }
+  };
+  if (A[act]) A[act]();
+});
+document.addEventListener("change", e => {
+  const t = e.target;
+  if (t.dataset.move) { moveMan(t.dataset.move, t.value); return; }
+  if (t.dataset.sel) { t.checked ? selAbast.add(t.dataset.sel) : selAbast.delete(t.dataset.sel); rerender(); return; }
+  if (t.dataset.photo) { const f = t.files[0]; if (f) readPhoto(f, url => { DRAFT.evid[t.dataset.photo] = url; delete DRAFT_ERR["e_" + t.dataset.photo]; rerender(); }); return; }
+  if (t.dataset.draft === "veiculo") { DRAFT.veiculo = t.value; const v = byId("veiculos", t.value); if (v) { DRAFT.km = DRAFT.km || String(v.km); DRAFT.avarias.forEach(a => a.ui.tipo = v.tipo === "Moto" ? "moto" : "carro"); const d = DB.motoristas.find(m => m.veiculo === v.id && m.status === "Ativo"); if (d && !DRAFT.motorista) DRAFT.motorista = d.id; } rerender(); return; }
+  if (t.dataset.draft === "motorista") { DRAFT.motorista = t.value; return; }
+  if (t.dataset.av) { const [i, k] = t.dataset.av.split("|"); DRAFT.avarias[i][k] = t.value; }
+});
+document.addEventListener("input", e => {
+  const t = e.target;
+  if (t.dataset.draft && t.dataset.draft !== "veiculo" && t.dataset.draft !== "motorista") DRAFT[t.dataset.draft] = t.value;
+  if (t.dataset.desc) DRAFT.desc[t.dataset.desc] = t.value;
+  if (t.dataset.av) { const [i, k] = t.dataset.av.split("|"); DRAFT.avarias[i][k] = t.value; }
+});
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") closeModal();
+  if ((e.key === "Enter" || e.key === " ") && e.target.dataset && e.target.dataset.map !== undefined) { e.preventDefault(); toast("Use o clique ou toque sobre o desenho para marcar o ponto exato."); }
+});
+window.addEventListener("hashchange", () => { closeModal(); render(); const m = document.getElementById("main"); if (m) m.scrollTop = 0; });
+
+applyCfg(); render();
+
+</script>
+</body>
+</html>
